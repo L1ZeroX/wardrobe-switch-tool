@@ -33,6 +33,16 @@ class DistributionTests(unittest.TestCase):
     def test_reproducible_zip(self):
         self.assertEqual(self.build("first")["sha256"], self.build("second")["sha256"])
 
+    def test_standalone_dependency_activation(self):
+        manifest = read_json(PACKAGE / "package.json")
+        self.assertNotIn("yagihata.radialinventorysystem.v4", manifest.get("vpmDependencies", {}))
+        for folder, name in [("Editor", "yagihata.radialinventorysystem.v4.Editor"), ("Runtime", "yagihata.radialinventorysystem.v4")]:
+            definition = read_json(PACKAGE / folder / (name + ".asmdef"))
+            activation = [v for v in definition["versionDefines"] if v["define"] == "RISV4_JSON"]
+            self.assertEqual(len(activation), 1)
+            self.assertEqual(activation[0]["name"], "com.unity.nuget.newtonsoft-json")
+            self.assertIn(activation[0]["name"], manifest["dependencies"])
+
     def test_listing_hash_urls_and_previous_versions(self):
         self.build("first", repository="example-tests/wardrobe-switch-tool")
         old_path = self.output / "first/site/index.json"

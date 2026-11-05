@@ -18,7 +18,7 @@
     "defineConstraints": [],
     "versionDefines": [
         {
-            "name": "yagihata.radialinventorysystem.v4",
+            "name": "com.unity.nuget.newtonsoft-json",
             "expression": "",
             "define": "RISV4_JSON"
         }

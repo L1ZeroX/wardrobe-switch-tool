@@ -16,6 +16,8 @@ VCC登録URL：`https://l1zerox.github.io/wardrobe-switch-tool/index.json`
 
 アバターや衣装モデル、購入素材、個人の設定・サムネイルは付属しません。
 
+**元のRadial Inventoryを別途インストールする必要はありません。** 必要な機能は本パッケージに含まれています。VRChat Avatars SDKとUnityの依存パッケージは必要です。既存設定を保つため、内部クラス名やデータ保存先には従来の名称を残しています。
+
 ## 対応環境
 
 Unity 2022.3 / VRChat Avatars SDK **3.10.3以上・3.11.0未満**。
@@ -62,6 +64,8 @@ VCCだけで置き換える場合も、先にVCCのプロジェクトバック�
 [操作ガイド](Packages/net.l1zerox.radialinventory/Documentation~/操作ガイド.md) / [変更履歴](Packages/net.l1zerox.radialinventory/CHANGELOG.md)
 
 1.7.1ではUnity 2022.3.6f1 / SDK 3.10.3で、生成・互換性50項目、Gesture Managerで一括切替27ケース、移行・復元4項目を確認しました。これらは開発環境の結果であり、あらゆるアバターや他ツールとの組み合わせを保証するものではありません。**VRChat実機・端末間同期は未検証**です。
+
+1.7.2ではUnity 2022.3.22f1 / SDK 3.10.3の新規検証環境に、元のRadial Inventoryと既存のRISV4_JSON設定がない状態で導入。起動・依存関係9項目、SDK付属のHumanoidを使った生成・一括切替50項目、移行・復元4項目を確認しました。
 
 ## ライセンス
 
