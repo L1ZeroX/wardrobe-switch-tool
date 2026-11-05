@@ -1,0 +1,1 @@
+namespace YagihataItems.RadialInventorySystemV4 { class VersionChecker { public static string GetNewerVersion() { return RIS.CurrentVersion; } } }

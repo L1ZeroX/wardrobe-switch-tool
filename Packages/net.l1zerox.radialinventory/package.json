@@ -1,0 +1,24 @@
+{
+  "name": "net.l1zerox.radialinventory",
+  "displayName": "衣装簡単切替ツール",
+  "version": "1.7.1",
+  "description": "Radial Inventory System V4 based wardrobe editor with stable paged menus and thumbnails.",
+  "gitDependencies": {},
+  "vpmDependencies": {
+    "com.vrchat.avatars": ">=3.10.3 <3.11.0"
+  },
+  "dependencies": {
+    "com.unity.nuget.newtonsoft-json": "2.0.2"
+  },
+  "author": {
+    "name": "L1ZeroX (based on Yagihata RIS V4)"
+  },
+  "legacyFolders": {},
+  "legacyFiles": {},
+  "type": "tool",
+  "legacyPackages": [
+    "yagihata.radialinventorysystem.v4"
+  ],
+  "license": "MIT",
+  "unity": "2022.3"
+}

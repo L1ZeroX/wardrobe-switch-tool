@@ -1,0 +1,7 @@
+# Keep package bytes identical when built on Windows and on GitHub Actions.
+Packages/** -text
+*.py text eol=lf
+*.yml text eol=lf
+*.html text eol=lf
+*.md text eol=lf
+Packages/**/*.md -text

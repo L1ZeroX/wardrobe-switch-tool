@@ -1,0 +1,54 @@
+name: Build and publish VCC package
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: vcc-release
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify packaging
+        run: python3 -m unittest discover -s scripts -p 'test_*.py'
+      - name: Build package and retain published versions
+        env:
+          REPOSITORY: ${{ github.repository }}
+        run: python3 scripts/build_release.py --repository "$REPOSITORY" --fetch-previous
+      - name: Publish immutable release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          VERSION=$(python3 -c 'import json; print(json.load(open("Packages/net.l1zerox.radialinventory/package.json"))["version"])')
+          ZIP="net.l1zerox.radialinventory-$VERSION.zip"
+          if gh release view "v$VERSION" >/dev/null 2>&1; then
+            mkdir -p existing
+            gh release download "v$VERSION" --pattern "$ZIP" --dir existing
+            cmp "dist/$ZIP" "existing/$ZIP"
+          else
+            gh release create "v$VERSION" "dist/$ZIP" "dist/net.l1zerox.radialinventory-$VERSION.json" dist/SHA256SUMS.txt --target "$GITHUB_SHA" --title "衣装簡単切替ツール $VERSION" --notes-file RELEASE-NOTES.md
+          fi
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/site
+  pages:
+    needs: release
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Publish VCC listing and download page
+        id: deployment
+        uses: actions/deploy-pages@v4
