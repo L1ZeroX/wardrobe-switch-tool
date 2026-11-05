@@ -2,6 +2,10 @@
 
 VRChatアバターの衣装を、個別またはグループで切り替えるUnityエディター拡張です。Radial Inventory System V4 4.6.0を基にした改変版です。
 
+**[配布ページ・VCCに追加](https://l1zerox.github.io/wardrobe-switch-tool/)**
+
+VCC登録URL：`https://l1zerox.github.io/wardrobe-switch-tool/index.json`
+
 ## 主な機能
 
 - Expressionsメニューから、個別切替・まとめて着る・まとめて脱ぐを操作。
