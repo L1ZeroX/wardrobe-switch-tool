@@ -15,6 +15,16 @@ namespace YagihataItems.RadialInventorySystemV4
         internal const string CreditProfileUrl = "https://x.com/L1ZE_ragram1";
         static GUIStyle profileButton;
 
+        internal static void DrawGroupSelection(Rect rect, bool selected)
+        {
+            if (!selected || Event.current.type != EventType.Repaint) return;
+            // Retain selection emphasis when keyboard focus moves to the clothing editor.
+            EditorGUI.DrawRect(rect, EditorGUIUtility.isProSkin
+                ? new Color(0.08f, 0.28f, 0.44f) : new Color(0.72f, 0.85f, 0.98f));
+            EditorGUI.DrawRect(new Rect(rect.x, rect.yMax - 3f, rect.width, 3f),
+                EditorGUIUtility.isProSkin ? new Color(0.18f, 0.60f, 1f) : new Color(0.05f, 0.35f, 0.75f));
+        }
+
         internal static void DrawCredit()
         {
             if (creditPortrait == null)

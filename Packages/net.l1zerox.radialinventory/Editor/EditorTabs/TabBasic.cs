@@ -251,6 +251,8 @@ namespace YagihataItems.RadialInventorySystemV4
                 groups = new List<Group>();
             groupsReorderableList = new ReorderableList(groups, typeof(Group))
             {
+                drawElementBackgroundCallback = (rect, index, isActive, isFocused) =>
+                    KaiEditorUI.DrawGroupSelection(rect, index == groupsReorderableList.index),
                 onReorderCallbackWithDetails = (l, from, to) => KaiReferences.GroupMoved(risAvatar, from, to),
                 drawHeaderCallback = rect =>
                 {
