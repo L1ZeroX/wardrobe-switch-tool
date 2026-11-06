@@ -24,7 +24,6 @@ namespace YagihataItems.RadialInventorySystemV4
         private Rect tabScopeRect = new Rect();
         private Dictionary<RIS.MenuModeType, EditorTab> tabItems = null;
         private List<Avatar> avatars = null;
-        private GUIStyle writeDefaultStyle;
         private GUIStyle countBarStyleL;
         private GUIStyle countBarStyleR;
         private VRCAvatarDescriptor avatarRoot = null;
@@ -113,11 +112,9 @@ namespace YagihataItems.RadialInventorySystemV4
                 tabItems.Add(RIS.MenuModeType.Advanced, new TabAdvanced());
             }
             if (countBarStyleL == null)
-                countBarStyleL = new GUIStyle(GUI.skin.label) { fontSize = 10, alignment = TextAnchor.UpperLeft, margin = new RectOffset(10, 10, 0, 0) };
+                countBarStyleL = new GUIStyle(GUI.skin.label) { fontSize = 12, alignment = TextAnchor.UpperLeft, margin = new RectOffset(10, 10, 0, 0) };
             if (countBarStyleR == null)
-                countBarStyleR = new GUIStyle(GUI.skin.label) { fontSize = 10, alignment = TextAnchor.UpperRight, margin = new RectOffset(10, 10, 0, 0) };
-            if (writeDefaultStyle == null)
-                writeDefaultStyle = new GUIStyle(GUI.skin.box) { alignment = TextAnchor.MiddleCenter, margin = new RectOffset(0, 5, -7, -7) };
+                countBarStyleR = new GUIStyle(GUI.skin.label) { fontSize = 12, alignment = TextAnchor.UpperRight, margin = new RectOffset(10, 10, 0, 0) };
             if (avatars == null)
                 LoadAvatars();
             using (var scrollScope = new EditorGUILayout.ScrollViewScope(scrollPosition))
@@ -128,7 +125,7 @@ namespace YagihataItems.RadialInventorySystemV4
                     var showingVerticalScrollOld = showingVerticalScroll;
                     if (verticalScope.rect.height != 0)
                         showingVerticalScroll = verticalScope.rect.height >= position.size.y;
-                    EditorGUILayout.HelpBox("① グループ → ② 衣装 → ③ 詳細設定・撮影 → 下の「適用する」で反映", MessageType.None);
+                    GUILayout.Label("① グループ → ② 衣装 → ③ 詳細・撮影 → 「適用する」で反映", KaiEditorUI.Hint);
 
                     if(RISV3toV4Updater.HasV3SettingsOnScene(RIS.SettingsNameV3))
                     {
@@ -141,16 +138,25 @@ namespace YagihataItems.RadialInventorySystemV4
                         EditorGUILayoutExtra.Separator();
                         EditorGUILayoutExtra.Space();
                     }
-                    using (new EditorGUILayout.HorizontalScope(EditorStyles.toolbar))
+                    using (new EditorGUILayout.HorizontalScope())
                     {
-                        GUILayout.Label("衣装簡単切替ツール " + RIS.CurrentVersion.Replace("ris_kai", ""), EditorStyles.miniBoldLabel);
+                        GUILayout.Space(6);
+                        GUILayout.Label("衣装簡単切替ツール " + RIS.CurrentVersion.Replace("ris_kai", ""), KaiEditorUI.Title, GUILayout.Height(KaiEditorUI.ControlHeight));
                         GUILayout.FlexibleSpace();
-                        if (GUILayout.Button("補助ツール…", EditorStyles.toolbarButton, GUILayout.Width(110))) KaiWardrobeWindow.Open(risAvatar);
+                        if (GUILayout.Button(new GUIContent("補助ツール…", "検索・衣装の一括登録・移行を開きます。"), KaiEditorUI.Button, GUILayout.Width(148))) KaiWardrobeWindow.Open(risAvatar);
+                        GUILayout.Space(6);
                     }
+                    GUILayout.Space(4);
                     EditorGUI.BeginChangeCheck();
                     var avatarDescriptors = FindObjectsOfType(typeof(VRCAvatarDescriptor));
                     indexedList.list = avatarDescriptors.Select(n => n.name).ToArray();
-                    indexedList.index = EditorGUILayoutExtra.IndexedStringList(RISStrings.GetString("target_avatar"), indexedList, RISStrings.GetString("unselected"));
+                    using (new EditorGUILayout.HorizontalScope())
+                    {
+                        GUILayout.Space(6);
+                        GUILayout.Label(RISStrings.GetString("target_avatar"), KaiEditorUI.Label, GUILayout.Width(KaiEditorUI.LabelWidth), GUILayout.Height(KaiEditorUI.ControlHeight));
+                        indexedList.index = EditorGUILayoutExtra.IndexedStringList("", indexedList, RISStrings.GetString("unselected"), KaiEditorUI.Popup, GUILayout.Height(KaiEditorUI.ControlHeight));
+                        GUILayout.Space(6);
+                    }
 
                     if (!isShowingJSONSelector && (EditorGUI.EndChangeCheck() || (avatarRoot == null && indexedList.index != -1)))
                     {
@@ -203,7 +209,7 @@ namespace YagihataItems.RadialInventorySystemV4
                     {
                         using (new EditorGUILayout.HorizontalScope())
                         {
-                            if (GUILayout.Button(RISStrings.GetString("export_file"), new GUIStyle("ButtonLeft")))
+                            if (GUILayout.Button(new GUIContent(RISStrings.GetString("export_file"), "現在の設定をJSONファイルとして保存します。"), KaiEditorUI.Button))
                             {
                                 if (risAvatar.AvatarRoot.GetObject() == null)
                                     return;
@@ -214,7 +220,7 @@ namespace YagihataItems.RadialInventorySystemV4
                                     EditorUtility.DisplayDialog(RISStrings.GetString("ris"), RISStrings.GetString("save_file"), RISStrings.GetString("ok"));
                                 }
                             }
-                            if (GUILayout.Button(RISStrings.GetString("restore_file"), new GUIStyle("ButtonRight")))
+                            if (GUILayout.Button(new GUIContent(RISStrings.GetString("restore_file"), "保存済みの設定JSONを読み込みます。"), KaiEditorUI.Button))
                             {
                                 var path = EditorUtility.OpenFilePanel(RISStrings.GetString("select_loadpath"), "", "json");
                                 if (!string.IsNullOrEmpty(path))
@@ -236,7 +242,7 @@ namespace YagihataItems.RadialInventorySystemV4
                                 }
                             }
                         }
-                        EditorGUILayoutExtra.SeparatorWithSpace();
+                        GUILayout.Space(6);
 
                         KaiAutoThumbnail.DrawSettings(risAvatar);
                         var memoryAdded = 0;
@@ -245,15 +251,10 @@ namespace YagihataItems.RadialInventorySystemV4
                             using (new EditorGUILayout.HorizontalScope())
                             {
                                 GUILayout.Space(5);
-                                risAvatar.MenuMode = (RIS.MenuModeType)GUILayout.Toolbar((int)risAvatar.MenuMode, TabStyle.GetTabToggles<RIS.MenuModeType>(), TabStyle.TabButtonStyle, TabStyle.TabButtonSize);
+                                risAvatar.MenuMode = (RIS.MenuModeType)GUILayout.Toolbar((int)risAvatar.MenuMode, new[] { new GUIContent(risAvatar.MenuMode == RIS.MenuModeType.Simple ? "● Simple" : "Simple", "部位と衣装セットを編集します。"), new GUIContent(risAvatar.MenuMode == RIS.MenuModeType.Basic ? "● Basic" : "Basic", "グループごとの衣装を編集します。"), new GUIContent(risAvatar.MenuMode == RIS.MenuModeType.Advanced ? "● Advanced" : "Advanced", "既存メニューやアニメーションなどを細かく設定します。") }, KaiEditorUI.Tabs, GUILayout.Width(360), GUILayout.Height(KaiEditorUI.ControlHeight));
                                 GUILayout.FlexibleSpace();
-                                EditorGUIUtility.labelWidth = RISStrings.GetWidth(0);
-
-                                using (new EditorGUILayout.HorizontalScope(writeDefaultStyle))
-                                {
-                                    risAvatar.UseWriteDefaults = EditorGUILayout.Toggle(RISStrings.GetString("use_writedefaults"), risAvatar.UseWriteDefaults);
-                                }
-                                EditorGUIUtility.labelWidth = 0;
+                                risAvatar.UseWriteDefaults = GUILayout.Toggle(risAvatar.UseWriteDefaults, new GUIContent(RISStrings.GetString("use_writedefaults"), "アニメーションのWrite Defaults設定。現在のアバターに合わせて設定してください。"), KaiEditorUI.Toggle, GUILayout.Width(340), GUILayout.Height(KaiEditorUI.ControlHeight));
+                                GUILayout.Space(6);
                             }
                             var skin = new GUIStyle(GUI.skin.box);
                             skin.margin.top = 0;
@@ -315,19 +316,20 @@ namespace YagihataItems.RadialInventorySystemV4
                         {
                             using (new EditorGUI.DisabledGroupScope(errors.Any() || memoryOver))
                             {
-                                if (GUILayout.Button(RISStrings.GetString("attach"), new GUIStyle("ButtonLeft")))
+                                if (GUILayout.Button(new GUIContent(RISStrings.GetString("attach"), "衣装設定・画像・Expressionsメニューをアバターへ反映します。"), KaiEditorUI.Button))
                                 {
                                     risAvatar.SaveToJson();
                                     if (tabItems.ContainsKey(risAvatar.MenuMode))
                                         tabItems[risAvatar.MenuMode].ApplyToAvatar(ref risAvatar);
                                 }
                             }
-                            if (GUILayout.Button(RISStrings.GetString("detach"), new GUIStyle("ButtonRight")))
+                            if (GUILayout.Button(new GUIContent(RISStrings.GetString("detach"), "このツールによるアバターへの適用を解除します。"), KaiEditorUI.Button))
                             {
                                 tabItems[risAvatar.MenuMode].RemoveFromAvatar(ref risAvatar);
                             }
                         }
                     }
+                    KaiEditorUI.DrawCredit();
                     GUILayout.FlexibleSpace();
                 }
             }

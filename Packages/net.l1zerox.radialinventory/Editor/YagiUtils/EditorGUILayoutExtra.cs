@@ -42,7 +42,7 @@ namespace YagihataItems.RadialInventorySystemV4
             EditorGUILayoutExtra.Separator();
             EditorGUILayoutExtra.Space();
         }
-        public static int IndexedStringList(string label, IndexedList indexedList, string unselectedStr = "(未選択)")
+        public static int IndexedStringList(string label, IndexedList indexedList, string unselectedStr = "(未選択)", GUIStyle popupStyle = null, params GUILayoutOption[] options)
         {
             EditorGUI.BeginChangeCheck();
             var property = indexedList.list;
@@ -53,7 +53,7 @@ namespace YagihataItems.RadialInventorySystemV4
             list.Add(unselectedStr);
             var selectedIndex = indexedList.list.Length == 0 ? -1 : indexedList.index < 0 ? indexedList.list.Length + 1 : indexedList.index;
             var displayOptions = list.ToArray();
-            var listIndex = EditorGUILayout.Popup(new GUIContent(label), indexedList.list.Length == 0 ? 1 : selectedIndex, displayOptions);
+            var listIndex = EditorGUILayout.Popup(label, indexedList.list.Length == 0 ? 1 : selectedIndex, displayOptions, popupStyle ?? EditorStyles.popup, options);
             var index = indexedList.list.Length > 0 ? listIndex : selectedIndex;
             if (EditorGUI.EndChangeCheck())
                 indexedList.index = index;

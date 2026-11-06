@@ -120,7 +120,14 @@ namespace YagihataItems.RadialInventorySystemV4
             if (data == null) return;
             Observe(data);
             var state = states.GetValue(data, _ => new State());
-            var automatic = EditorGUILayout.Popup(new GUIContent("サムネイル作成", "自動: 衣装の登録・対象変更時に、衣装だけを透明背景で撮影。手動: ボタンで撮影、または画像を指定。"), data.KaiAutoThumbnail ? 0 : 1, new[] { "自動（衣装追加時に撮影）", "手動（撮影・画像指定）" }) == 0;
+            bool automatic;
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                GUILayout.Space(6);
+                GUILayout.Label(new GUIContent("サムネイル作成", "自動: 衣装追加時に透過画像を撮影。手動: 撮影ボタンや画像指定を使用。"), KaiEditorUI.Label, GUILayout.Width(KaiEditorUI.LabelWidth), GUILayout.Height(KaiEditorUI.ControlHeight));
+                automatic = EditorGUILayout.Popup(data.KaiAutoThumbnail ? 0 : 1, new[] { "自動（衣装追加時に撮影）", "手動（撮影・画像指定）" }, KaiEditorUI.Popup, GUILayout.Height(KaiEditorUI.ControlHeight)) == 0;
+                GUILayout.Space(6);
+            }
             if (automatic != data.KaiAutoThumbnail) SetAutomatic(data, automatic);
             if (!string.IsNullOrEmpty(state.Status)) EditorGUILayout.HelpBox(state.Status, MessageType.None);
         }

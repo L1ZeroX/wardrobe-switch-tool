@@ -89,7 +89,7 @@ namespace YagihataItems.RadialInventorySystemV4
                     using (new EditorGUILayout.VerticalScope(GUILayout.Width(cellWidth + 20)))
                     {
                         EditorGUIUtility.labelWidth = RISStrings.GetWidth(4);
-                        EditorGUILayout.LabelField("② グループ設定・衣装一覧", new GUIStyle("ProjectBrowserHeaderBgTop"), GUILayout.ExpandWidth(true));
+                        EditorGUILayout.LabelField("② グループ設定・衣装一覧", KaiEditorUI.SectionHeading, GUILayout.ExpandWidth(true));
                         GUILayout.Space(3);
                         selectedGroup.Name = EditorGUILayout.TextField(RISStrings.GetString("group_name"), selectedGroup.Name);
 
@@ -137,7 +137,7 @@ namespace YagihataItems.RadialInventorySystemV4
                     {
                         GUIStyle headerStyle = new GUIStyle("HeaderLabel");
                         headerStyle.margin = new RectOffset(5, 5, 20, 20);
-                        EditorGUILayout.LabelField("③ 選択した衣装の詳細", new GUIStyle("ProjectBrowserHeaderBgTop"), GUILayout.ExpandWidth(true));
+                        EditorGUILayout.LabelField("③ 選択した衣装の詳細", KaiEditorUI.SectionHeading, GUILayout.ExpandWidth(true));
                         GUILayout.Space(3);
                         EditorGUIUtility.labelWidth = RISStrings.GetWidth(5);
                         selectedProp.Name = EditorGUILayout.TextField(RISStrings.GetString("prop_name"), selectedProp.Name);
