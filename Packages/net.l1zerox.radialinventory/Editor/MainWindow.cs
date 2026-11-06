@@ -143,6 +143,7 @@ namespace YagihataItems.RadialInventorySystemV4
                         GUILayout.Space(6);
                         GUILayout.Label("衣装簡単切替ツール " + RIS.CurrentVersion.Replace("ris_kai", ""), KaiEditorUI.Title, GUILayout.Height(KaiEditorUI.ControlHeight));
                         GUILayout.FlexibleSpace();
+                        if (GUILayout.Button(new GUIContent("設定…", "表示する編集モードを選びます。"), KaiEditorUI.Button, GUILayout.Width(90))) KaiModeSettingsWindow.Open();
                         if (GUILayout.Button(new GUIContent("補助ツール…", "検索・衣装の一括登録・移行を開きます。"), KaiEditorUI.Button, GUILayout.Width(148))) KaiWardrobeWindow.Open(risAvatar);
                         GUILayout.Space(6);
                     }
@@ -183,7 +184,7 @@ namespace YagihataItems.RadialInventorySystemV4
                                 }
                                 else
                                 {
-                                    risAvatar = new Avatar();
+                                    risAvatar = KaiModeSettings.CreateAvatar();
                                 }
                             }
                             if (avatarRoot != null)
@@ -200,7 +201,7 @@ namespace YagihataItems.RadialInventorySystemV4
                     }
                     var isRootNull = avatarRoot == null;
                     if (risAvatar == null)
-                        risAvatar = new Avatar();
+                        risAvatar = KaiModeSettings.CreateAvatar();
                     if (!isRootNull && risAvatar != null && risAvatar.AvatarRoot?.GetObject() == null)
                     {
                         risAvatar.AvatarRoot.SetObject(avatarRoot);
@@ -251,11 +252,12 @@ namespace YagihataItems.RadialInventorySystemV4
                             using (new EditorGUILayout.HorizontalScope())
                             {
                                 GUILayout.Space(5);
-                                risAvatar.MenuMode = (RIS.MenuModeType)GUILayout.Toolbar((int)risAvatar.MenuMode, new[] { new GUIContent(risAvatar.MenuMode == RIS.MenuModeType.Simple ? "● Simple" : "Simple", "部位と衣装セットを編集します。"), new GUIContent(risAvatar.MenuMode == RIS.MenuModeType.Basic ? "● Basic" : "Basic", "グループごとの衣装を編集します。"), new GUIContent(risAvatar.MenuMode == RIS.MenuModeType.Advanced ? "● Advanced" : "Advanced", "既存メニューやアニメーションなどを細かく設定します。") }, KaiEditorUI.Tabs, GUILayout.Width(360), GUILayout.Height(KaiEditorUI.ControlHeight));
+                                KaiModeSettings.DrawToolbar(risAvatar);
                                 GUILayout.FlexibleSpace();
                                 risAvatar.UseWriteDefaults = GUILayout.Toggle(risAvatar.UseWriteDefaults, new GUIContent(RISStrings.GetString("use_writedefaults"), "アニメーションのWrite Defaults設定。現在のアバターに合わせて設定してください。"), KaiEditorUI.Toggle, GUILayout.Width(340), GUILayout.Height(KaiEditorUI.ControlHeight));
                                 GUILayout.Space(6);
                             }
+                            KaiModeSettings.DrawRetainedModeNotice(risAvatar);
                             var skin = new GUIStyle(GUI.skin.box);
                             skin.margin.top = 0;
                             using (var scope = new EditorGUILayout.VerticalScope(skin))
