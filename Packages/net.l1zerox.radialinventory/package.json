@@ -1,7 +1,7 @@
 {
   "name": "net.l1zerox.radialinventory",
   "displayName": "衣装簡単切替ツール",
-  "version": "1.7.4",
+  "version": "1.7.5",
   "description": "Radial Inventory System V4 based wardrobe editor with stable paged menus and thumbnails.",
   "gitDependencies": {},
   "vpmDependencies": {
