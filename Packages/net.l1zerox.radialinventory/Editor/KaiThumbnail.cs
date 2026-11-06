@@ -267,7 +267,7 @@ namespace YagihataItems.RadialInventorySystemV4
                     importer.alphaSource = TextureImporterAlphaSource.FromInput;
                     importer.alphaIsTransparency = true;
                     importer.mipmapEnabled = false;
-                    importer.maxTextureSize = 512;
+                    KaiIconImport.Configure(importer);
                     importer.SaveAndReimport();
                     icon = AssetDatabase.LoadAssetAtPath<Texture2D>(pathOut);
                     if (icon == null) throw new IOException("撮影画像の読み込みに失敗しました。");
