@@ -49,16 +49,17 @@ namespace YagihataItems.RadialInventorySystemV4
             if (targetId == id && !forceEnable)
             {
                 targetId = -1;
-                InitializePropList(null, risAvatar);
             }
             else
             {
                 targetId = id;
-                if (risAvatar != null && targetId < risAvatar.Groups.Count)
-                {
-                    InitializePropList(risAvatar.Groups[targetId], risAvatar);
-                }
             }
+            // Always rebuild the binding, including a new avatar with no groups.
+            // Otherwise the list is null, or still points to the previous avatar.
+            var groups = risAvatar?.Groups;
+            var group = groups != null && targetId >= 0 && targetId < groups.Count
+                ? groups[targetId] : null;
+            InitializePropList(group, risAvatar);
             targetProp = new Prop();
             InitializeGameObjectsList(risAvatar);
             InitializePropSetList(risAvatar);
