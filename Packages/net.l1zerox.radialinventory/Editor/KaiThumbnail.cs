@@ -105,7 +105,24 @@ namespace YagihataItems.RadialInventorySystemV4
             }
             return branches.ToArray();
         }
-        static Texture2D CaptureCore(Avatar data, Prop prop, float yaw, float zoom, bool focusClothing, Group fullGroup, bool previewOnly = false)
+        sealed class HeelPreview
+        {
+            public KaiHeelLink.Link Link;
+            public bool Worn, Feet;
+            public float Pitch;
+        }
+        // Return an owned temporary texture; no source renderer, icon or asset is edited.
+        public static Texture2D PreviewHeel(Avatar data, Prop original, Prop settings, bool worn, bool feet, float yaw, float pitch, float zoom)
+        {
+            var group = data.Groups.FirstOrDefault(g => g.Props.Contains(original));
+            if (group == null) throw new InvalidOperationException("衣装が削除されています。調整画面を開き直してください。");
+            var link = KaiHeelLink.Resolve(data, settings);
+            if (link == null) throw new InvalidOperationException("連動を自動または手動指定にして、対象の靴を選んでください。");
+            if (link.Error != null) throw new InvalidOperationException(link.Error);
+            return CaptureCore(data, settings, yaw, zoom, false, group, true,
+                new HeelPreview { Link = link, Worn = worn, Feet = feet, Pitch = pitch });
+        }
+        static Texture2D CaptureCore(Avatar data, Prop prop, float yaw, float zoom, bool focusClothing, Group fullGroup, bool previewOnly = false, HeelPreview heel = null)
         {
             bool fullAvatar = fullGroup != null;
             var original = data.GetAvatarRoot();
@@ -177,6 +194,16 @@ namespace YagihataItems.RadialInventorySystemV4
                             foreach (var renderer in otherOutfit.GetComponentsInChildren<Renderer>(true)) renderer.enabled = false;
                     }
                 }
+                if (heel != null)
+                {
+                    // Other shoes in this outfit must not obscure the selected pair.
+                    foreach (var item in fullGroup.Props)
+                        if (KaiHeelLink.Resolve(data, item) != null) apply(item, false);
+                    apply(prop, heel.Worn);
+                    var path = AnimationUtility.CalculateTransformPath(heel.Link.Renderer.transform, original.transform);
+                    var body = (string.IsNullOrEmpty(path) ? clone.transform : clone.transform.Find(path)).GetComponent<SkinnedMeshRenderer>();
+                    body.SetBlendShapeWeight(body.sharedMesh.GetBlendShapeIndex(heel.Link.Shape), heel.Worn ? heel.Link.Weight : 0);
+                }
                 clone.SetActive(true);
                 foreach (var node in clone.GetComponentsInChildren<Transform>(true))
                     if (node.CompareTag("EditorOnly")) node.gameObject.SetActive(false);
@@ -217,6 +244,25 @@ namespace YagihataItems.RadialInventorySystemV4
                 else LastVisibleRendererPaths = renderers.Select(r => AnimationUtility.CalculateTransformPath(r.transform, clone.transform)).OrderBy(p => p).ToArray();
                 var bounds = TightBounds(framing[0]);
                 foreach (var renderer in framing.Skip(1)) bounds.Encapsulate(TightBounds(renderer));
+                if (heel != null && heel.Feet)
+                {
+                    var path = AnimationUtility.CalculateTransformPath(heel.Link.Renderer.transform, original.transform);
+                    var body = (string.IsNullOrEmpty(path) ? clone.transform : clone.transform.Find(path)).GetComponent<SkinnedMeshRenderer>();
+                    var bodyBounds = TightBounds(body);
+                    // Frame the lower quarter of the body even when the shoes are hidden.
+                    // This also works with differently named meshes and non-humanoid rigs.
+                    float height = Mathf.Max(bodyBounds.size.y * .25f, .08f);
+                    bounds = new Bounds(new Vector3(bodyBounds.center.x, bodyBounds.min.y + height * .5f, bodyBounds.center.z),
+                        new Vector3(Mathf.Min(bodyBounds.size.x, height * 1.6f), height, Mathf.Min(bodyBounds.size.z, height)));
+                    foreach (var reference in prop.TargetObjects)
+                    {
+                        var source = reference?.GetObject(original.gameObject);
+                        if (source == null) continue;
+                        var target = clone.transform.Find(AnimationUtility.CalculateTransformPath(source.transform, original.transform));
+                        if (target != null) foreach (var renderer in target.GetComponentsInChildren<Renderer>(true)) bounds.Encapsulate(TightBounds(renderer));
+                    }
+                    bounds.Expand(height * .12f);
+                }
                 LastFramedBounds = bounds;
                 var camera = preview.camera;
                 camera.clearFlags = CameraClearFlags.SolidColor;
@@ -226,7 +272,7 @@ namespace YagihataItems.RadialInventorySystemV4
                 camera.fieldOfView = 30;
                 // A bounding sphere also accounts for the near side of deep garments/shoes in perspective.
                 float distance = Mathf.Max(0.001f, bounds.extents.magnitude) / Mathf.Sin(15 * Mathf.Deg2Rad) * 1.05f / Mathf.Clamp(zoom, 0.5f, 3f);
-                camera.transform.position = bounds.center + Quaternion.Euler(0, yaw, 0) * Vector3.forward * distance;
+                camera.transform.position = bounds.center + Quaternion.Euler(heel == null ? 0 : heel.Pitch, yaw, 0) * Vector3.forward * distance;
                 camera.transform.LookAt(bounds.center);
                 camera.nearClipPlane = 0.01f;
                 camera.farClipPlane = distance + bounds.size.magnitude * 3 + 10;

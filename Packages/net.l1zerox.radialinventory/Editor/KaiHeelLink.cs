@@ -38,8 +38,8 @@ namespace YagihataItems.RadialInventorySystemV4
         static int BodyScore(string name)
         {
             string n = Normalize(name);
-            if (n == "bodyall") return 4;
-            if (n.StartsWith("bodyall", StringComparison.Ordinal)) return 3;
+            if (n == "bodyall" || n == "bodybase") return 4;
+            if (n.StartsWith("bodyall", StringComparison.Ordinal) || n.StartsWith("bodybase", StringComparison.Ordinal)) return 3;
             if (n == "body") return 2;
             return n.Contains("body") || n == "素体" ? 1 : 0;
         }
@@ -47,9 +47,12 @@ namespace YagihataItems.RadialInventorySystemV4
         {
             var root = data.GetAvatarRoot(); var list = new List<Link>();
             if (root == null) return list;
+            var clothing = new HashSet<SkinnedMeshRenderer>(data.Groups.SelectMany(g => g.Props).SelectMany(p => p.TargetObjects)
+                .Select(t => t?.GetObject(root.gameObject)).Where(t => t != null)
+                .SelectMany(t => t.GetComponentsInChildren<SkinnedMeshRenderer>(true)));
             foreach (var renderer in root.GetComponentsInChildren<SkinnedMeshRenderer>(true))
             {
-                if (renderer.sharedMesh == null || BodyScore(renderer.name) == 0) continue;
+                if (renderer.sharedMesh == null || clothing.Contains(renderer)) continue;
                 for (int i = 0; i < renderer.sharedMesh.blendShapeCount; i++)
                 {
                     string name = renderer.sharedMesh.GetBlendShapeName(i);
@@ -212,14 +215,22 @@ namespace YagihataItems.RadialInventorySystemV4
         public static void DrawGlobal(Avatar data)
         {
             if (data.MenuMode == RIS.MenuModeType.Simple) return;
+            using (new EditorGUILayout.HorizontalScope())
+            {
             data.KaiExperimentalHeels = EditorGUILayout.ToggleLeft("実験：靴とヒール補正を連動", data.KaiExperimentalHeels);
+            if (GUILayout.Button("ヒール補正を調整…", GUILayout.Width(180), GUILayout.Height(26))) KaiHeelWindow.Open(data);
+            }
             if (!data.KaiExperimentalHeels) return;
             var links = Collect(data); int missing = links.Count(l => l.Error != null);
-            EditorGUILayout.HelpBox("Shoesを含む衣装を自動検出。連動対象 " + links.Count + "件" + (missing > 0 ? "／要設定 " + missing + "件（衣装の詳細で確認）" : "") + "。脱ぐと0、履くと設定値になります。", missing > 0 ? MessageType.Warning : MessageType.None);
+            EditorGUILayout.HelpBox("Shoesを含む衣装を自動検出。連動対象 " + links.Count + "件" + (missing > 0 ? "／要設定 " + missing + "件（調整画面で確認）" : "") + "。脱ぐと0、履くと設定値になります。", missing > 0 ? MessageType.Warning : MessageType.None);
         }
         public static void DrawProp(Avatar data, Prop prop)
         {
             if (!data.KaiExperimentalHeels) return;
+            if (GUILayout.Button("ヒール補正をプレビューで調整…", GUILayout.Height(28))) KaiHeelWindow.Open(data, prop);
+        }
+        public static void DrawSettings(Avatar data, Prop prop)
+        {
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
                 EditorGUILayout.LabelField("実験：ヒール補正", EditorStyles.boldLabel);
@@ -239,6 +250,15 @@ namespace YagihataItems.RadialInventorySystemV4
                 {
                     var root = data.GetAvatarRoot();
                     var old = prop.KaiHeelRenderer?.GetObject(root?.gameObject)?.GetComponent<SkinnedMeshRenderer>();
+                    var meshes = root == null ? new SkinnedMeshRenderer[0] : root.GetComponentsInChildren<SkinnedMeshRenderer>(true).Where(r => r.sharedMesh != null && r.sharedMesh.blendShapeCount > 0).ToArray();
+                    int before = Array.IndexOf(meshes, old) + 1;
+                    int after = EditorGUILayout.Popup("メッシュを一覧から選ぶ", before, new[] { "選択してください" }.Concat(meshes.Select(r => AnimationUtility.CalculateTransformPath(r.transform, root.transform))).ToArray());
+                    if (after != before)
+                    {
+                        old = after == 0 ? null : meshes[after - 1];
+                        prop.KaiHeelRenderer = old == null ? null : new GUIDPathPair<GameObject>(ObjectPathStateType.RelativeFromObject, old.gameObject, root.gameObject);
+                        prop.KaiHeelShape = null;
+                    }
                     var renderer = (SkinnedMeshRenderer)EditorGUILayout.ObjectField("対象メッシュ", old, typeof(SkinnedMeshRenderer), true);
                     if (renderer != old)
                     {
