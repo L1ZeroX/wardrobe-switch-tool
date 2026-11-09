@@ -9,7 +9,7 @@ namespace YagihataItems.RadialInventorySystemV4
     {
         public struct Hit { public Vector3 Point, Normal; public float Distance; }
         sealed class Node { public Bounds Box; public Node Left, Right; public int Start, Count; }
-        readonly Vector3[] vertices, normals;
+        Vector3[] vertices, normals;
         readonly int[] triangles, order;
         readonly Node root;
         public KaiFitSurface(Vector3[] points, Vector3[] directions, int[] indices)
@@ -18,6 +18,29 @@ namespace YagihataItems.RadialInventorySystemV4
             order=new int[indices.Length/3]; for(int i=0;i<order.Length;i++) order[i]=i;
             if(order.Length==0) throw new InvalidOperationException("三角形のあるメッシュを選んでください。");
             root=Build(0,order.Length);
+        }
+        public void Refit(Vector3[] points,Vector3[] directions)
+        {
+            if(points.Length!=vertices.Length)throw new InvalidOperationException("頂点数が変更されています。");
+            vertices=points;normals=directions;RefitNode(root);
+        }
+        void RefitNode(Node n)
+        {
+            if(n.Left!=null)
+            {RefitNode(n.Left);RefitNode(n.Right);n.Box=n.Left.Box;n.Box.Encapsulate(n.Right.Box);return;}
+            n.Box=new Bounds(vertices[triangles[order[n.Start]*3]],Vector3.zero);
+            for(int i=n.Start;i<n.Start+n.Count;i++)for(int j=0;j<3;j++)n.Box.Encapsulate(vertices[triangles[order[i]*3+j]]);
+        }
+        public bool OutwardDistance(Vector3 point,Vector3 outward,float range,float gap,out float distance)
+        {
+            distance=0;
+            if(outward.sqrMagnitude<.5f)return false;
+            outward.Normalize();
+            // Search only along the garment's outward direction. Nearest-surface
+            // normals can point inward when a scaled breast encloses a garment vertex.
+            if(!Raycast(new Ray(point+outward*range,-outward),out var hit))return false;
+            if(Vector3.Dot(hit.Normal,outward)<.2f || hit.Distance>range+gap)return false;
+            distance=range-hit.Distance+gap;return distance>1e-6f;
         }
         Vector3 Center(int t) => (vertices[triangles[t*3]]+vertices[triangles[t*3+1]]+vertices[triangles[t*3+2]])/3;
         Node Build(int start,int count)

@@ -12,5 +12,6 @@ namespace YagihataItems.RadialInventorySystemV4
         public string BodyShape;
         public float OriginalBodyValue, AppliedBodyValue;
         public bool Applied;
+        public string BatchID;
     }
 }

@@ -104,7 +104,7 @@ try {
   foreach($section in @('dependencies','locked')){
    if(!$manifest.$section){$manifest|Add-Member $section ([pscustomobject]@{})}
    $manifest.$section.PSObject.Properties.Remove('yagihata.radialinventorysystem.v4')
-   $value=[pscustomobject]@{version='1.13.0'}
+   $value=[pscustomobject]@{version='1.14.0'}
    if($section -eq 'locked'){$value|Add-Member dependencies ([pscustomobject]@{'com.vrchat.avatars'='>=3.10.3 <3.11.0'})}
    $manifest.$section|Add-Member 'net.l1zerox.radialinventory' $value -Force
   }
@@ -113,7 +113,7 @@ try {
   $upm=Get-Content -LiteralPath $upmPath -Raw -Encoding UTF8|ConvertFrom-Json
   $upm.dependencies.PSObject.Properties.Remove('yagihata.radialinventorysystem.v4')
   WriteJson $upmPath $upm
-  WriteJson (Join-Path $project 'RI-Kai-Migration.json') ([ordered]@{backup=$saved;version='1.13.0';date=(Get-Date -Format o)})
+  WriteJson (Join-Path $project 'RI-Kai-Migration.json') ([ordered]@{backup=$saved;version='1.14.0';date=(Get-Date -Format o)})
   Log "INSTALL OK $project (backup: $saved)"
  } catch {
   # Roll back the replaced package and manifests; preserve failed output for diagnosis.

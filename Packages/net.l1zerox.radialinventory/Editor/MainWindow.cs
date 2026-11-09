@@ -28,6 +28,11 @@ namespace YagihataItems.RadialInventorySystemV4
         private GUIStyle countBarStyleR;
         private VRCAvatarDescriptor avatarRoot = null;
         private Avatar risAvatar = null;
+        public static Avatar CurrentAvatar(GameObject root=null)
+        {
+            return Resources.FindObjectsOfTypeAll<MainWindow>().Select(w=>w.risAvatar)
+                .FirstOrDefault(a=>a?.GetAvatarRoot()!=null&&(root==null||a.GetAvatarRoot().gameObject==root));
+        }
         private bool isShowingJSONSelector = false;
         private void OnEnable() { titleContent = new GUIContent("衣装簡単切替ツール"); }
         [MenuItem("衣装簡単切替ツール/エディター", priority = 0)]
@@ -144,7 +149,7 @@ namespace YagihataItems.RadialInventorySystemV4
                         GUILayout.FlexibleSpace();
                         if (GUILayout.Button(new GUIContent("設定…", "表示する編集モードを選びます。"), KaiEditorUI.Button, GUILayout.Width(90))) KaiModeSettingsWindow.Open();
                         if (GUILayout.Button(new GUIContent("補助ツール…", "検索・衣装の一括登録・移行を開きます。"), KaiEditorUI.Button, GUILayout.Width(148))) KaiWardrobeWindow.Open(risAvatar);
-                        if (GUILayout.Button("胸・衣装補正…", KaiEditorUI.Button, GUILayout.Width(136))) KaiChestFitWindow.Open(risAvatar?.GetAvatarRoot()?.gameObject);
+                        if (GUILayout.Button("胸・衣装補正…", KaiEditorUI.Button, GUILayout.Width(136))) KaiChestFitWindow.OpenRegistered(risAvatar);
                         GUILayout.Space(6);
                     }
                     GUILayout.Space(4);
