@@ -356,7 +356,7 @@ namespace YagihataItems.RadialInventorySystemV4
 #endif
 		}
 #if RISV4_V3
-		[MenuItem("Radial Inventory/RISV4 Disable V3", priority = 30)]
+		[MenuItem("衣装簡単切替ツール/メンテナンス/V3移行を無効化", priority = 30)]
 		public static void DisableV3Update()
 		{
 			ScriptingDefineSymbolsUtil.Remove("RISV4_V3");

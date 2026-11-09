@@ -30,7 +30,6 @@ namespace YagihataItems.RadialInventorySystemV4
         private Avatar risAvatar = null;
         private bool isShowingJSONSelector = false;
         private void OnEnable() { titleContent = new GUIContent("衣装簡単切替ツール"); }
-        [MenuItem("Radial Inventory/RISV4 Editor", priority = 1)]
         [MenuItem("衣装簡単切替ツール/エディター", priority = 0)]
         private static void Create()
         {

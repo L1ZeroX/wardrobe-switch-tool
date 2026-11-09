@@ -9,7 +9,7 @@ namespace YagihataItems.RadialInventorySystemV4
 {
     public static class PackageInstaller
     {
-        [MenuItem("Radial Inventory/RISV4 Reload Packages", priority = 32)]
+        [MenuItem("衣装簡単切替ツール/メンテナンス/依存パッケージを確認", priority = 32)]
         public static void ReloadPackages()
         {
             CheckPackages();

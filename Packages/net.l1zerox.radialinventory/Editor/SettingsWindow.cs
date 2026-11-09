@@ -34,7 +34,7 @@ namespace YagihataItems.RadialInventorySystemV4
             }
             MenuItemUtils.Update();
         }
-        [MenuItem("Radial Inventory/RISV4 Settings", priority = 50)]
+        [MenuItem("衣装簡単切替ツール/詳細設定", priority = 20)]
         private static void Create()
         {
             RISStrings.EditorInitialize();
