@@ -3,6 +3,7 @@ const viewerImage = document.getElementById('viewer-image');
 document.querySelectorAll('[data-image]').forEach(button => {
   button.addEventListener('click', () => {
     viewerImage.src = button.dataset.image;
+    document.getElementById('original-image').href = button.dataset.image;
     viewerImage.alt = button.querySelector('img').alt;
     document.getElementById('viewer-caption').textContent = button.dataset.caption;
     viewer.showModal();
