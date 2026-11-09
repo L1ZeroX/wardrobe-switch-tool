@@ -109,6 +109,7 @@ namespace YagihataItems.RadialInventorySystemV4
 
                         selectedGroup.UseResetButton = EditorGUILayout.Toggle(RISStrings.GetString("reset_button"), selectedGroup.UseResetButton);
                         KaiGroupSwitch.Draw(risAvatar, groupIndex, selectedGroup);
+                        KaiOutfitImport.Draw(risAvatar, selectedGroup);
 
                         using (var scope = new EditorGUILayout.HorizontalScope())
                         {
@@ -299,6 +300,7 @@ namespace YagihataItems.RadialInventorySystemV4
                     var name = groups[index].Name;
                     if (string.IsNullOrEmpty(name))
                         name = string.Format(RISStrings.GetString("defaultname_group"), index);
+                    KaiOutfitImport.HandleDrop(new Rect(rect.x, rect.y, rect.width - 22, rect.height), risAvatar, groups[index]);
                     var thumbnail = groups[index].Icon?.GetObject();
                     if (thumbnail != null) GUI.DrawTexture(new Rect(rect.x, rect.y + 2, 32, 32), thumbnail, ScaleMode.ScaleToFit, true);
                     var labelRect = new Rect(rect.x + 38, rect.y, rect.width - 60, rect.height);

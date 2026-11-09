@@ -92,6 +92,7 @@ namespace YagihataItems.RadialInventorySystemV4
             groupIndex = Mathf.Clamp(groupIndex, 0, data.Groups.Count - 1);
             groupIndex = EditorGUILayout.Popup("グループ", groupIndex, data.Groups.Select((g, i) => i + ": " + g.Name).ToArray());
             var group = data.Groups[groupIndex];
+            if (data.MenuMode != RIS.MenuModeType.Simple) KaiOutfitImport.Draw(data, group);
             diagnostics = EditorGUILayout.Foldout(diagnostics, "移行診断・参照の修正");
             if (diagnostics)
             {

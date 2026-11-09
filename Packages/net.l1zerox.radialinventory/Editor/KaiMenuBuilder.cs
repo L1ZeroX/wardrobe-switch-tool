@@ -108,6 +108,7 @@ namespace YagihataItems.RadialInventorySystemV4
                     controls.Add(KaiGroupSwitch.Control(data, g, true));
                     controls.Add(KaiGroupSwitch.Control(data, g, false));
                     controls.Add(KaiGroupSwitch.Setting("他の衣装を自動OFF", KaiGroupSwitch.AutoOff(g)));
+                    controls.Add(KaiGroupSwitch.Setting("着脱状態を記憶", KaiGroupSwitch.Remember(g)));
                 }
                 if (data.MenuMode != RIS.MenuModeType.Simple)
                     controls.Add(KaiGroupSwitch.Setting("このグループを保持", KaiGroupSwitch.Keep(g)));

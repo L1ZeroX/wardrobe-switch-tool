@@ -22,6 +22,11 @@ namespace YagihataItems.RadialInventorySystemV4
         public static string PropName(int group, int prop) => RIS.Prefix + "-G" + group + "P" + prop;
         public static string AutoOff(int group) => RIS.Prefix + "-G" + group + "AUTOOFF";
         public static string Keep(int group) => RIS.Prefix + "-G" + group + "KEEP";
+        public static string Remember(int group) => RIS.Prefix + "-G" + group + "REMEMBER";
+        public static string Memory(int group, int prop) => PropName(group, prop) + "MEMORY";
+        public static string Suspended(int group) => RIS.Prefix + "-G" + group + "SUSPENDED";
+        public static string Worn(int group) => RIS.Prefix + "-G" + group + "WORN";
+        public const string Busy = "RISV4-BULKBUSY";
 
         public static void Draw(Avatar data, int groupIndex, Group group)
         {
@@ -31,6 +36,7 @@ namespace YagihataItems.RadialInventorySystemV4
             group.KaiToggleWholeGroup = EditorGUILayout.Toggle(new GUIContent("グループ内の排他を解除", "排他設定のあるグループでも一括操作を使う場合にONにします。元の排他設定は保存されます。"), group.KaiToggleWholeGroup);
             group.KaiTurnOffOtherGroups = EditorGUILayout.Toggle("自動OFFの初期値", group.KaiTurnOffOtherGroups);
             group.KaiIncludeInOutfitSwitch = !EditorGUILayout.Toggle("グループ保持の初期値", !group.KaiIncludeInOutfitSwitch);
+            group.KaiRememberPropStates = EditorGUILayout.Toggle(new GUIContent("着脱状態を記憶", "個別に脱いだ状態を、他の衣装から戻るときに復元します。記憶はアバターを読み込み直すまで有効です。ExpressionsでもON/OFFできます。グループ保持は、他の衣装を着ても脱がせない別の設定です。"), group.KaiRememberPropStates);
             if (groupIndex >= 0 && groupIndex < data.Groups.Count && !Enabled(data, groupIndex))
                 EditorGUILayout.HelpBox("このグループは既存の排他動作を優先しています。一括操作も使う場合は「グループ内の排他を解除」をONにしてください。旧式排他のグループは自動OFFから保護されます。", MessageType.Info);
             EditorGUIUtility.labelWidth = width;
@@ -50,6 +56,8 @@ namespace YagihataItems.RadialInventorySystemV4
                 {
                     yield return new VRCExpressionParameters.Parameter { name = AutoOff(g), valueType = VRCExpressionParameters.ValueType.Bool,
                         defaultValue = data.Groups[g].KaiTurnOffOtherGroups ? 1 : 0, saved = true, networkSynced = false };
+                    yield return new VRCExpressionParameters.Parameter { name = Remember(g), valueType = VRCExpressionParameters.ValueType.Bool,
+                        defaultValue = data.Groups[g].KaiRememberPropStates ? 1 : 0, saved = true, networkSynced = false };
                 }
             }
         }
@@ -87,6 +95,14 @@ namespace YagihataItems.RadialInventorySystemV4
                 if (!controller.parameters.Any(p => p.name == parameter.name)) controller.AddParameter(new AnimatorControllerParameter {
                     name = parameter.name, type = parameter.valueType == VRCExpressionParameters.ValueType.Float ? AnimatorControllerParameterType.Float : AnimatorControllerParameterType.Bool,
                     defaultBool = parameter.defaultValue != 0, defaultFloat = parameter.defaultValue });
+            AddLocalBool(controller, Busy);
+            for (int g = 0; g < data.Groups.Count; g++)
+            {
+                if (!Enabled(data, g)) continue;
+                AddLocalBool(controller, Suspended(g));
+                AddLocalBool(controller, Worn(g));
+                for (int p = 0; p < data.Groups[g].Props.Count; p++) AddLocalBool(controller, Memory(g, p));
+            }
             // One interruptible dispatcher: a newer click replaces the pending request.
             // A Toggle latches the click until it is consumed; releasing the pointer cannot erase it.
             var layer = controller.AddAnimatorControllerLayer(RIS.Prefix + "-BULK-COMMANDS");
@@ -95,6 +111,7 @@ namespace YagihataItems.RadialInventorySystemV4
             wait.motion = noneClip;
             wait.writeDefaultValues = data.UseWriteDefaults;
             machine.defaultState = wait;
+            Drive(wait, new[] { Value(Busy, 0) });
             for (int g = 0; g < data.Groups.Count; g++)
             {
                 if (!Enabled(data, g)) continue;
@@ -111,9 +128,9 @@ namespace YagihataItems.RadialInventorySystemV4
                     transition.AddCondition(AnimatorConditionMode.Greater, code - margin, Request);
                     transition.AddCondition(AnimatorConditionMode.Less, code + margin, Request);
                     transition.AddCondition(AnimatorConditionMode.If, 0, "IsLocal");
-                    Drive(state, Enumerable.Range(0, data.Groups[g].Props.Count).Select(p => new KeyValuePair<string, float>(PropName(g, p), on ? 1 : 0))
-                        .Concat(new[] { new KeyValuePair<string, float>(Request, 0) }));
-                    var current = state;
+                    Drive(state, new[] { Value(Request, 0), Value(Busy, 1) });
+                    var current = on ? BuildWear(data, machine, state, g, noneClip)
+                        : BuildUndress(data, machine, state, g, noneClip, state.name);
                     if (on)
                         for (int other = 0; other < data.Groups.Count; other++)
                         {
@@ -127,8 +144,7 @@ namespace YagihataItems.RadialInventorySystemV4
                             apply.AddCondition(AnimatorConditionMode.IfNot, 0, Keep(other));
                             Connect(current, next).AddCondition(AnimatorConditionMode.IfNot, 0, AutoOff(g));
                             Connect(current, next).AddCondition(AnimatorConditionMode.If, 0, Keep(other));
-                            Drive(off, Enumerable.Range(0, data.Groups[other].Props.Count).Select(p => new KeyValuePair<string, float>(PropName(other, p), 0)));
-                            Connect(off, next);
+                            Connect(BuildUndress(data, machine, off, other, noneClip, off.name), next);
                             current = next;
                         }
                     // Never clear a newer request at the end of an older operation.
@@ -136,8 +152,93 @@ namespace YagihataItems.RadialInventorySystemV4
                 }
                 EditorUtility.SetDirty(machine);
             }
+            BuildManualResume(data, controller, noneClip);
             BuildInactiveParents(data, controller, animationsFolder);
             EditorUtility.SetDirty(controller);
+        }
+
+        static KeyValuePair<string, float> Value(string name, float value) => new KeyValuePair<string, float>(name, value);
+        static void AddLocalBool(AnimatorController controller, string name)
+        {
+            if (!controller.parameters.Any(p => p.name == name)) controller.AddParameter(name, AnimatorControllerParameterType.Bool);
+        }
+        static AnimatorState State(Avatar data, AnimatorStateMachine machine, string name, AnimationClip clip)
+        {
+            var state = machine.AddState(name);
+            state.motion = clip; state.writeDefaultValues = data.UseWriteDefaults;
+            return state;
+        }
+        static void CopyProps(AnimatorState state, Avatar data, int group, bool restore, IEnumerable<KeyValuePair<string, float>> after)
+        {
+            var driver = state.AddStateMachineBehaviour<VRCAvatarParameterDriver>();
+            driver.localOnly = true;
+            for (int p = 0; p < data.Groups[group].Props.Count; p++)
+                driver.parameters.Add(new VRC_AvatarParameterDriver.Parameter {
+                    name = restore ? PropName(group, p) : Memory(group, p),
+                    source = restore ? Memory(group, p) : PropName(group, p),
+                    type = VRC_AvatarParameterDriver.ChangeType.Copy });
+            // Copy all values before clearing any prop. One state entry is an atomic command.
+            foreach (var value in after)
+                driver.parameters.Add(new VRC_AvatarParameterDriver.Parameter { name = value.Key, value = value.Value, type = VRC_AvatarParameterDriver.ChangeType.Set });
+            EditorUtility.SetDirty(driver);
+        }
+        static AnimatorState BuildWear(Avatar data, AnimatorStateMachine machine, AnimatorState entry, int group, AnimationClip clip)
+        {
+            var restore = State(data, machine, "G" + group + "-Restore", clip);
+            var all = State(data, machine, "G" + group + "-WearAll", clip);
+            var done = State(data, machine, "G" + group + "-Dressed", clip);
+            var useMemory = Connect(entry, restore);
+            useMemory.AddCondition(AnimatorConditionMode.If, 0, Remember(group));
+            useMemory.AddCondition(AnimatorConditionMode.If, 0, Suspended(group));
+            for (int p = 0; p < data.Groups[group].Props.Count; p++) useMemory.AddCondition(AnimatorConditionMode.IfNot, 0, PropName(group, p));
+            Connect(entry, all); // Ordered fallback: no saved outfit, disabled memory, or already wearing it.
+            var flags = new[] { Value(Suspended(group), 0), Value(Worn(group), 1) };
+            CopyProps(restore, data, group, true, flags);
+            Drive(all, Enumerable.Range(0, data.Groups[group].Props.Count).Select(p => Value(PropName(group, p), 1)).Concat(flags));
+            Connect(restore, done); Connect(all, done);
+            return done;
+        }
+        static AnimatorState BuildUndress(Avatar data, AnimatorStateMachine machine, AnimatorState entry, int group, AnimationClip clip, string prefix)
+        {
+            var offValues = Enumerable.Range(0, data.Groups[group].Props.Count).Select(p => Value(PropName(group, p), 0));
+            var off = State(data, machine, prefix + "-Clear", clip);
+            Drive(off, offValues);
+            if (!Enabled(data, group)) { Connect(entry, off); return off; }
+            var capture = State(data, machine, prefix + "-Remember", clip);
+            var done = State(data, machine, prefix + "-Done", clip);
+            // A manual toggle while suspended counts as a newly edited outfit, even before the watcher runs.
+            for (int p = 0; p < data.Groups[group].Props.Count; p++)
+                Connect(entry, capture).AddCondition(AnimatorConditionMode.If, 0, PropName(group, p));
+            var allManuallyOff = Connect(entry, capture);
+            allManuallyOff.AddCondition(AnimatorConditionMode.IfNot, 0, Suspended(group));
+            allManuallyOff.AddCondition(AnimatorConditionMode.If, 0, Worn(group));
+            Connect(entry, off); // Repeated OFF must not overwrite memory with the automatic zeros.
+            CopyProps(capture, data, group, false, offValues.Concat(new[] { Value(Suspended(group), 1), Value(Worn(group), 1) }));
+            Connect(capture, done); Connect(off, done);
+            return done;
+        }
+        static void BuildManualResume(Avatar data, AnimatorController controller, AnimationClip clip)
+        {
+            for (int g = 0; g < data.Groups.Count; g++)
+            {
+                if (!Enabled(data, g)) continue;
+                var machine = controller.AddAnimatorControllerLayer(RIS.Prefix + "-MEMORY-G" + g).stateMachine;
+                var wait = State(data, machine, "Wait", clip);
+                var resume = State(data, machine, "ManualOutfit", clip);
+                machine.defaultState = wait;
+                Drive(resume, new[] { Value(Suspended(g), 0), Value(Worn(g), 1) });
+                for (int p = 0; p < data.Groups[g].Props.Count; p++)
+                    foreach (bool hidden in new[] { true, false })
+                    {
+                        var transition = Connect(wait, resume);
+                        transition.AddCondition(AnimatorConditionMode.IfNot, 0, Busy);
+                        transition.AddCondition(AnimatorConditionMode.Less, 0.00001f, Request);
+                        transition.AddCondition(AnimatorConditionMode.If, 0, PropName(g, p));
+                        transition.AddCondition(hidden ? AnimatorConditionMode.If : AnimatorConditionMode.IfNot, 0, hidden ? Suspended(g) : Worn(g));
+                    }
+                Connect(resume, wait);
+                EditorUtility.SetDirty(machine);
+            }
         }
 
         static AnimatorStateTransition Connect(AnimatorState from, AnimatorState to)
