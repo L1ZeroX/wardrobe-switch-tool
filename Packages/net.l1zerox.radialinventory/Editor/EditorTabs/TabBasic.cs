@@ -199,6 +199,7 @@ namespace YagihataItems.RadialInventorySystemV4
 
                         selectedProp.IsLocalOnly = EditorGUILayout.Toggle(RISStrings.GetString("local_mode"), selectedProp.IsLocalOnly);
                         KaiDefaultOutfit.DrawSaved(risAvatar, selectedProp);
+                        KaiHeelLink.DrawProp(risAvatar, selectedProp);
 
                         if(selectedProp.TargetObjects.Count <= 0)
                             selectedProp.TargetObjects.Add(null);
@@ -658,6 +659,7 @@ namespace YagihataItems.RadialInventorySystemV4
             AssetDatabase.CreateAsset(fallbackClip, animationsFolder + $"FallbackClip" + ".anim");
             AddFallbackDriver(ref fxLayer, ref risAvatar, fallbackClip);
             KaiGroupSwitch.Build(risAvatar, fxLayer, noneClip, animationsFolder);
+            KaiHeelLink.Build(risAvatar, fxLayer, animationsFolder);
 
             var genericFlag = avatar.IsGenericAvatar();
             var layerCount = genericFlag ? 3 : 5;

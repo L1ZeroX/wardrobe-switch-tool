@@ -198,6 +198,7 @@ namespace YagihataItems.RadialInventorySystemV4
                         }
                         selectedProp.IsLocalOnly = EditorGUILayout.Toggle(RISStrings.GetString("local_mode"), selectedProp.IsLocalOnly);
                         KaiDefaultOutfit.DrawSaved(risAvatar, selectedProp);
+                        KaiHeelLink.DrawProp(risAvatar, selectedProp);
                         GUILayout.Space(5);
                         EditorGUILayout.LabelField(RISStrings.GetString("additional_animation"));
                         EditorGUI.BeginChangeCheck();
@@ -1838,6 +1839,7 @@ namespace YagihataItems.RadialInventorySystemV4
             AssetDatabase.CreateAsset(fallbackClip, animationsFolder + $"FallbackClip" + ".anim");
             AddFallbackDriver(ref fxLayer, ref risAvatar, fallbackClip);
             KaiGroupSwitch.Build(risAvatar, fxLayer, noneClip, animationsFolder);
+            KaiHeelLink.Build(risAvatar, fxLayer, animationsFolder);
 
             AssetDatabase.SaveAssets();
 

@@ -21,6 +21,7 @@ namespace YagihataItems.RadialInventorySystemV4
         [JsonProperty] public bool UseWriteDefaults { get; set; } = false;
         [JsonProperty] public bool KaiAutoThumbnail { get; set; } = true;
         [JsonProperty] public bool KaiUseDefaultGroup { get; set; } = false;
+        [JsonProperty] public bool KaiExperimentalHeels { get; set; } = false;
         [JsonProperty] private bool OptimizeParameters { get; set; } = true;
         [JsonProperty] private bool ApplyEnableDefault { get; set; } = true;
         [JsonProperty] public List<Group> Groups { get; set; } = new List<Group>();

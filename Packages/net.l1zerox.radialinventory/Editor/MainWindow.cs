@@ -236,6 +236,8 @@ namespace YagihataItems.RadialInventorySystemV4
                                     risAvatar.ExclusiveDisableClips = avatar.ExclusiveDisableClips;
                                     risAvatar.MenuMode = avatar.MenuMode;
                                     risAvatar.KaiAutoThumbnail = avatar.KaiAutoThumbnail;
+                                    risAvatar.KaiUseDefaultGroup = avatar.KaiUseDefaultGroup;
+                                    risAvatar.KaiExperimentalHeels = avatar.KaiExperimentalHeels;
                                     risAvatar.ForceReload();
                                     foreach (var v in tabItems.Values)
                                         v.InitializeTab(ref risAvatar);
@@ -259,6 +261,7 @@ namespace YagihataItems.RadialInventorySystemV4
                             }
                             KaiModeSettings.DrawRetainedModeNotice(risAvatar);
                             KaiDefaultOutfit.Draw(risAvatar);
+                            KaiHeelLink.DrawGlobal(risAvatar);
                             var skin = new GUIStyle(GUI.skin.box);
                             skin.margin.top = 0;
                             using (var scope = new EditorGUILayout.VerticalScope(skin))

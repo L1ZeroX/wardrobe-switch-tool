@@ -15,6 +15,10 @@ namespace YagihataItems.RadialInventorySystemV4
         [JsonProperty] public string KaiPartID { get; set; }
         [JsonProperty] public List<Prop> KaiMergedParts { get; set; }
         [JsonProperty] public List<int> KaiMergedOffsets { get; set; }
+        [JsonProperty] public int KaiHeelMode { get; set; } // 0: automatic, 1: disabled, 2: manual
+        [JsonProperty] public float? KaiHeelWeight { get; set; }
+        [JsonProperty] public GUIDPathPair<GameObject> KaiHeelRenderer { get; set; }
+        [JsonProperty] public string KaiHeelShape { get; set; }
         [JsonProperty] public bool IsDefaultEnabled { get; set; } = false;
         [JsonProperty] public bool IsLocalOnly { get; set; } = false;
         [JsonProperty] public GUIDPathPair<Texture2D> Icon { get; set; } = null;
@@ -62,6 +66,7 @@ namespace YagihataItems.RadialInventorySystemV4
         public void ForceReload(GameObject parent)
         {
             if (KaiMergedParts != null) foreach (var part in KaiMergedParts) part?.ForceReload(parent);
+            KaiHeelRenderer?.ForceReload(parent);
             Icon?.ForceReload();
             DisableAnimation?.ForceReload();
             EnableAnimation?.ForceReload();

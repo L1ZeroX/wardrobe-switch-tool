@@ -20,6 +20,7 @@ namespace YagihataItems.RadialInventorySystemV4
         public static void Require(Avatar data)
         {
             if (data == null) throw new InvalidOperationException("設定を読み込んでください。");
+            KaiHeelLink.Validate(data);
             if (KaiDefaultOutfit.Enabled(data))
                 for (int g = 0; g < data.Groups.Count; g++)
                     if (data.Groups[g].KaiDefaultGroup && !KaiGroupSwitch.Enabled(data, g))
