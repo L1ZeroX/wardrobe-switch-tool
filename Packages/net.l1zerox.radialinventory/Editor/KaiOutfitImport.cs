@@ -31,6 +31,7 @@ namespace YagihataItems.RadialInventorySystemV4
             public readonly List<Part> Parts = new List<Part>();
             public readonly List<Choice> Choices = new List<Choice>();
             public int AlreadyRegistered;
+            public string SuggestedGroupName;
         }
         static readonly Regex BreastSize = new Regex(@"(?i)(?:big|small|large|medium)[ _-]*breasts?|breasts?[ _-]*(?:big|small|large|medium)|[大小]胸|胸[大小]", RegexOptions.CultureInvariant);
         static string VariantKey(string path) => BreastSize.Replace(path.Normalize(), "{breast-size}").ToLowerInvariant();
@@ -74,7 +75,7 @@ namespace YagihataItems.RadialInventorySystemV4
             candidates = candidates.Where(o => !candidates.Any(parent => parent != o && o.transform.IsChildOf(parent.transform))).ToList();
             var existing = group.Props.SelectMany(p => p.TargetObjects).Select(r => r?.GetObject(root)).Where(o => o != null).ToArray();
             var registeredFamilies = new HashSet<string>(existing.Select(o => VariantKey(AnimationUtility.CalculateTransformPath(o.transform, root.transform))));
-            var plan = new Plan { Data = data, Group = group };
+            var plan = new Plan { Data = data, Group = group, SuggestedGroupName = KaiDefaultOutfit.OutfitName(data, sources) };
             foreach (var candidate in candidates)
             {
                 var path = AnimationUtility.CalculateTransformPath(candidate.transform, root.transform);
@@ -110,7 +111,11 @@ namespace YagihataItems.RadialInventorySystemV4
                 return prop;
             }).ToArray();
             KaiAutoThumbnail.Observe(plan.Data);
+            if (additions.Length > 0 && !string.IsNullOrEmpty(plan.SuggestedGroupName) &&
+                (plan.Group.Props.Count == 0 || Regex.IsMatch(plan.Group.Name ?? "", @"^(グループ|Group)\s*\d*$")))
+                plan.Group.Name = plan.SuggestedGroupName;
             plan.Group.Props.AddRange(additions);
+            KaiDefaultOutfit.Enforce(plan.Data);
             KaiAutoThumbnail.Observe(plan.Data);
             foreach (var window in Resources.FindObjectsOfTypeAll<MainWindow>())
             {

@@ -16,9 +16,13 @@ namespace YagihataItems.RadialInventorySystemV4
         }
         static void Map(Avatar data, Func<int, int, IndexPair> transform)
         {
-            foreach (var prop in data.Groups.SelectMany(g => g.Props))
+            foreach (var prop in KaiPropBundle.AllProps(data))
             {
-                prop.PropSets = prop.PropSets.Where(p => p != null).Select(p => transform(p.GroupIndex, p.PropIndex)).Where(p => p != null).ToList();
+                prop.PropSets = prop.PropSets.Where(p => p != null).Select(p => {
+                    var mapped = transform(p.GroupIndex, p.PropIndex);
+                    if (mapped != null) mapped.KaiTargetPartID = p.KaiTargetPartID;
+                    return mapped;
+                }).Where(p => p != null).ToList();
                 foreach (var parameter in prop.Parameters.Where(p => p != null && p.IsRISParam))
                 {
                     var match = Regex.Match(parameter.Name ?? "", @"^RISV4-G(\d+)P(\d+)$");
@@ -52,7 +56,7 @@ namespace YagihataItems.RadialInventorySystemV4
             }
             data.ExclusiveModes = modes;
             data.ExclusiveDisableClips = clips;
-            foreach (var prop in data.Groups.SelectMany(g => g.Props))
+            foreach (var prop in KaiPropBundle.AllProps(data))
                 if (prop.ExclusiveGroup != RIS.ExclusiveGroupType.None) prop.ExclusiveGroup = (RIS.ExclusiveGroupType)map((int)prop.ExclusiveGroup);
         }
         public static void RemoveProp(Avatar data, Group group, int index)

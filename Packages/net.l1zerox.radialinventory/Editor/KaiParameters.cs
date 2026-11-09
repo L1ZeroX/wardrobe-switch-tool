@@ -37,7 +37,8 @@ namespace YagihataItems.RadialInventorySystemV4
                     var prop = group.Props[p];
                     var exclusive = data.MenuMode != RIS.MenuModeType.Advanced ? (g < 8 ? (RIS.ExclusiveGroupType)g : RIS.ExclusiveGroupType.None) : prop.ExclusiveGroup;
                     bool legacy = !KaiGroupSwitch.Enabled(data, g) && data.GetExclusiveMode(exclusive) == RIS.ExclusiveModeType.LegacyExclusive;
-                    add(RIS.Prefix + "-G" + g + "P" + p, prop.IsDefaultEnabled && !legacy ? 1 : 0, prop.UseSaveParameter, VRCExpressionParameters.ValueType.Bool);
+                    add(RIS.Prefix + "-G" + g + "P" + p, KaiDefaultOutfit.Default(data, group, prop) && !legacy ? 1 : 0,
+                        prop.UseSaveParameter && !KaiDefaultOutfit.Enabled(data), VRCExpressionParameters.ValueType.Bool);
                 }
             }
             result.AddRange(KaiGroupSwitch.Parameters(data));

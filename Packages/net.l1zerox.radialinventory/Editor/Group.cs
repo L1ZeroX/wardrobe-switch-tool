@@ -15,6 +15,7 @@ namespace YagihataItems.RadialInventorySystemV4
         [JsonProperty] public bool KaiTurnOffOtherGroups { get; set; } = true;
         [JsonProperty] public bool KaiIncludeInOutfitSwitch { get; set; } = true;
         [JsonProperty] public bool KaiRememberPropStates { get; set; } = true;
+        [JsonProperty] public bool KaiDefaultGroup { get; set; } = false;
         [JsonProperty] public string KaiIconID { get; set; }
         [JsonProperty] public string KaiThumbnailSignature { get; set; }
         [JsonProperty] public List<Prop> Props { get; set; } = new List<Prop>();

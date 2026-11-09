@@ -14,6 +14,7 @@ namespace YagihataItems.RadialInventorySystemV4
     public class Parameter
     {
         [JsonProperty] public bool IsRISParam { get; set; } = true;
+        [JsonProperty] public string KaiTargetPartID { get; set; }
         [JsonProperty(ItemConverterType = typeof(StringEnumConverter))] public VRCExpressionParameters.ValueType ValueType { get; set; } = VRCExpressionParameters.ValueType.Bool;
         [JsonProperty] public string Name { get; set; } = "";
         [JsonProperty] public float Value { get; set; }

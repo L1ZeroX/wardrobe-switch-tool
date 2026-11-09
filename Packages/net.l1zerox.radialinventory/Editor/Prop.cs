@@ -12,6 +12,9 @@ namespace YagihataItems.RadialInventorySystemV4
     public class Prop
     {
         [JsonProperty] public string KaiIconID { get; set; }
+        [JsonProperty] public string KaiPartID { get; set; }
+        [JsonProperty] public List<Prop> KaiMergedParts { get; set; }
+        [JsonProperty] public List<int> KaiMergedOffsets { get; set; }
         [JsonProperty] public bool IsDefaultEnabled { get; set; } = false;
         [JsonProperty] public bool IsLocalOnly { get; set; } = false;
         [JsonProperty] public GUIDPathPair<Texture2D> Icon { get; set; } = null;
@@ -48,7 +51,7 @@ namespace YagihataItems.RadialInventorySystemV4
             var avatarRoot = avatar.GetAvatarRoot();
             if (avatarRoot == null)
                 return null;
-            return TargetObjects?.FirstOrDefault(v => v?.GetObject(avatarRoot.gameObject) != null).GetObject(avatarRoot.gameObject);
+            return TargetObjects?.FirstOrDefault(v => v?.GetObject(avatarRoot.gameObject) != null)?.GetObject(avatarRoot.gameObject);
         }
         public Prop()
         {
@@ -58,6 +61,7 @@ namespace YagihataItems.RadialInventorySystemV4
         }
         public void ForceReload(GameObject parent)
         {
+            if (KaiMergedParts != null) foreach (var part in KaiMergedParts) part?.ForceReload(parent);
             Icon?.ForceReload();
             DisableAnimation?.ForceReload();
             EnableAnimation?.ForceReload();

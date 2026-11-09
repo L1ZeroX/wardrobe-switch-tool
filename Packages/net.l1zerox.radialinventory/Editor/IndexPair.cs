@@ -13,6 +13,7 @@ namespace YagihataItems.RadialInventorySystemV4
     {
         [JsonProperty] public int GroupIndex;
         [JsonProperty] public int PropIndex;
+        [JsonProperty] public string KaiTargetPartID;
     }
 }
 #endif

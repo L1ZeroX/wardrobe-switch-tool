@@ -315,6 +315,7 @@ namespace YagihataItems.RadialInventorySystemV4
             public GenerationScope(Avatar avatar)
             {
                 data = avatar;
+                KaiDefaultOutfit.Enforce(data);
                 modes = data.ExclusiveModes == null ? null : (RIS.ExclusiveModeType[])data.ExclusiveModes.Clone();
                 for (int g = 0; g < data.Groups.Count; g++)
                 {

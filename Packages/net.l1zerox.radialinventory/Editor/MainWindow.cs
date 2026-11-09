@@ -258,6 +258,7 @@ namespace YagihataItems.RadialInventorySystemV4
                                 GUILayout.Space(6);
                             }
                             KaiModeSettings.DrawRetainedModeNotice(risAvatar);
+                            KaiDefaultOutfit.Draw(risAvatar);
                             var skin = new GUIStyle(GUI.skin.box);
                             skin.margin.top = 0;
                             using (var scope = new EditorGUILayout.VerticalScope(skin))

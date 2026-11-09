@@ -54,7 +54,7 @@ namespace YagihataItems.RadialInventorySystemV4
                     if (risAvatar.GetAvatarRoot() != null)
                     {
                         var parentGameObject = risAvatar.GetAvatarRoot()?.gameObject;
-                        if (prop.TargetObjects.Count <= 0 || prop.TargetObjects[0]?.GetObject(parentGameObject) == null)
+                        if (prop.TargetObjects.Count <= 0 || prop.TargetObjects.Any(t => t?.GetObject(parentGameObject) == null))
                             errors.Add(string.Format(RISStrings.GetString("err_nullobject"), groupName, propName));
                     }
                 }
@@ -108,6 +108,7 @@ namespace YagihataItems.RadialInventorySystemV4
                         EditorGUILayout.LabelField("② グループ設定・衣装一覧", KaiEditorUI.SectionHeading, GUILayout.ExpandWidth(true));
                         GUILayout.Space(3);
                         selectedGroup.Name = EditorGUILayout.TextField(RISStrings.GetString("group_name"), selectedGroup.Name);
+                        KaiDefaultOutfit.DrawName(risAvatar, selectedGroup);
 
                         EditorGUI.BeginChangeCheck();
 
@@ -126,6 +127,7 @@ namespace YagihataItems.RadialInventorySystemV4
                         selectedGroup.UseResetButton = EditorGUILayout.Toggle(RISStrings.GetString("reset_button"), selectedGroup.UseResetButton);
                         KaiGroupSwitch.Draw(risAvatar, groupIndex, selectedGroup);
                         KaiOutfitImport.Draw(risAvatar, selectedGroup);
+                        KaiPropBundle.Draw(risAvatar, selectedGroup, selectedProp);
 
                         using (var scope = new EditorGUILayout.HorizontalScope())
                         {
@@ -159,6 +161,7 @@ namespace YagihataItems.RadialInventorySystemV4
                         GUILayout.Space(3);
                         EditorGUIUtility.labelWidth = RISStrings.GetWidth(3);
                         selectedProp.Name = EditorGUILayout.TextField(RISStrings.GetString("prop_name"), selectedProp.Name);
+                        KaiPropBundle.DrawDetails(risAvatar, selectedProp);
 
                         EditorGUI.BeginChangeCheck();
 
@@ -174,7 +177,8 @@ namespace YagihataItems.RadialInventorySystemV4
                             selectedProp.ExclusiveGroup = (RIS.ExclusiveGroupType)groupIndex;
 
                         EditorGUI.BeginChangeCheck();
-                        selectedProp.IsDefaultEnabled = EditorGUILayout.Toggle(RISStrings.GetString("default_status"), selectedProp.IsDefaultEnabled);
+                        using (new EditorGUI.DisabledScope(KaiDefaultOutfit.Enabled(risAvatar)))
+                            selectedProp.IsDefaultEnabled = EditorGUILayout.Toggle(RISStrings.GetString("default_status"), selectedProp.IsDefaultEnabled);
                         if (EditorGUI.EndChangeCheck())
                         {
                             var exclusiveGroup = selectedProp.ExclusiveGroup;
@@ -194,7 +198,7 @@ namespace YagihataItems.RadialInventorySystemV4
                         }
 
                         selectedProp.IsLocalOnly = EditorGUILayout.Toggle(RISStrings.GetString("local_mode"), selectedProp.IsLocalOnly);
-                        selectedProp.UseSaveParameter = EditorGUILayout.Toggle(RISStrings.GetString("save_status"), selectedProp.UseSaveParameter);
+                        KaiDefaultOutfit.DrawSaved(risAvatar, selectedProp);
 
                         if(selectedProp.TargetObjects.Count <= 0)
                             selectedProp.TargetObjects.Add(null);
@@ -203,7 +207,8 @@ namespace YagihataItems.RadialInventorySystemV4
                         var parent = risAvatar.GetAvatarRoot()?.gameObject;
                         var targetObject = selectedProp.TargetObjects[0]?.GetObject(parent);
                         EditorGUI.BeginChangeCheck();
-                        targetObject = (GameObject)EditorGUILayout.ObjectField(targetObject, typeof(GameObject), true);
+                        using (new EditorGUI.DisabledScope(KaiPropBundle.IsMerged(selectedProp)))
+                            targetObject = (GameObject)EditorGUILayout.ObjectField(targetObject, typeof(GameObject), true);
                         if (EditorGUI.EndChangeCheck())
                         {
                             if (selectedProp.TargetObjects[0] == null)
@@ -338,7 +343,7 @@ namespace YagihataItems.RadialInventorySystemV4
                     }
                     if (group != null && props.Count < maxPropCount && GUI.Button(position, ReorderableListStyle.AddContent, ReorderableListStyle.AddStyle))
                     {
-                        var newProp = new Prop();
+                        var newProp = new Prop { IsDefaultEnabled = KaiDefaultOutfit.Enabled(risAvatar) && group.KaiDefaultGroup };
                         newProp.TargetObjects.Add(null);
                         if (group.Props == null)
                             group.Props = new List<Prop>();
@@ -447,8 +452,8 @@ namespace YagihataItems.RadialInventorySystemV4
                 foreach (var propIndex in Enumerable.Range(0, group.Props.Count))
                 {
                     var prop = group.Props[propIndex];
-                    var targetObject = prop?.GetFirstTargetObject(risAvatar);
-                    if(targetObject != null)
+                    var targets = prop.TargetObjects.Select(t => t?.GetObject(avatar.gameObject)).Where(t => t != null).Distinct().ToArray();
+                    foreach (var targetObject in targets)
                     {
                         if (EditorSettings.ApplyEnableDefault)
                             targetObject.SetActive(prop.IsDefaultEnabled);
@@ -489,12 +494,17 @@ namespace YagihataItems.RadialInventorySystemV4
                     else
                     {
                         var clipName = "G" + groupIndex.ToString() + "P" + propIndex.ToString();
-                        var relativePath = targetObject.GetRelativePath(avatar.gameObject, false);
-
                         stateMachine.defaultState = prop.IsDefaultEnabled ? onState : offState;
-
-                        onState.motion = UnityUtils.CreateAnimationClip(relativePath, 1, typeof(GameObject), "m_IsActive", $"{clipName}ON", animationsFolder);
-                        offState.motion = UnityUtils.CreateAnimationClip(relativePath, 0, typeof(GameObject), "m_IsActive", $"{clipName}OFF", animationsFolder);
+                        var onClip = new AnimationClip(); var offClip = new AnimationClip();
+                        foreach (var targetObject in targets)
+                        {
+                            var relativePath = targetObject.GetRelativePath(avatar.gameObject, false);
+                            onClip.SetCurve(relativePath, typeof(GameObject), "m_IsActive", AnimationCurve.Constant(0, 1f / onClip.frameRate, 1));
+                            offClip.SetCurve(relativePath, typeof(GameObject), "m_IsActive", AnimationCurve.Constant(0, 1f / offClip.frameRate, 0));
+                        }
+                        AssetDatabase.CreateAsset(onClip, animationsFolder + clipName + "ON.anim");
+                        AssetDatabase.CreateAsset(offClip, animationsFolder + clipName + "OFF.anim");
+                        onState.motion = onClip; offState.motion = offClip;
                     }
                     if (exclusiveMode != RIS.ExclusiveModeType.None)
                     {
@@ -619,7 +629,8 @@ namespace YagihataItems.RadialInventorySystemV4
                             frameValue = 1;
                         curve.AddKey(0f, frameValue);
                         curve.AddKey(1f / clip.frameRate, frameValue);
-                        clip.SetCurve(prop.GetFirstTargetObject(risAvatar)?.GetRelativePath(avatar.gameObject, false), typeof(GameObject), "m_IsActive", curve);
+                        foreach (var target in prop.TargetObjects.Select(t => t?.GetObject(avatar.gameObject)).Where(t => t != null).Distinct())
+                            clip.SetCurve(target.GetRelativePath(avatar.gameObject, false), typeof(GameObject), "m_IsActive", curve);
 
                         if (activeIndex == -1)
                         {

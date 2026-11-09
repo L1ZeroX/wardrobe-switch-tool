@@ -92,6 +92,7 @@ namespace YagihataItems.RadialInventorySystemV4
                         EditorGUILayout.LabelField("② グループ設定・衣装一覧", KaiEditorUI.SectionHeading, GUILayout.ExpandWidth(true));
                         GUILayout.Space(3);
                         selectedGroup.Name = EditorGUILayout.TextField(RISStrings.GetString("group_name"), selectedGroup.Name);
+                        KaiDefaultOutfit.DrawName(risAvatar, selectedGroup);
 
                         EditorGUI.BeginChangeCheck();
 
@@ -110,6 +111,7 @@ namespace YagihataItems.RadialInventorySystemV4
                         selectedGroup.UseResetButton = EditorGUILayout.Toggle(RISStrings.GetString("reset_button"), selectedGroup.UseResetButton);
                         KaiGroupSwitch.Draw(risAvatar, groupIndex, selectedGroup);
                         KaiOutfitImport.Draw(risAvatar, selectedGroup);
+                        KaiPropBundle.Draw(risAvatar, selectedGroup, selectedProp);
 
                         using (var scope = new EditorGUILayout.HorizontalScope())
                         {
@@ -142,6 +144,7 @@ namespace YagihataItems.RadialInventorySystemV4
                         GUILayout.Space(3);
                         EditorGUIUtility.labelWidth = RISStrings.GetWidth(5);
                         selectedProp.Name = EditorGUILayout.TextField(RISStrings.GetString("prop_name"), selectedProp.Name);
+                        KaiPropBundle.DrawDetails(risAvatar, selectedProp);
 
                         EditorGUI.BeginChangeCheck();
 
@@ -174,7 +177,8 @@ namespace YagihataItems.RadialInventorySystemV4
                                 risAvatar.SetExclusiveMode(selectedProp.ExclusiveGroup, v2Mode ? RIS.ExclusiveModeType.LegacyExclusive : RIS.ExclusiveModeType.Exclusive);
                         }
                         EditorGUI.BeginChangeCheck();
-                        selectedProp.IsDefaultEnabled = EditorGUILayout.Toggle(RISStrings.GetString("default_status"), selectedProp.IsDefaultEnabled);
+                        using (new EditorGUI.DisabledScope(KaiDefaultOutfit.Enabled(risAvatar)))
+                            selectedProp.IsDefaultEnabled = EditorGUILayout.Toggle(RISStrings.GetString("default_status"), selectedProp.IsDefaultEnabled);
                         if (EditorGUI.EndChangeCheck())
                         {
                             var exclusiveGroup = selectedProp.ExclusiveGroup;
@@ -193,6 +197,7 @@ namespace YagihataItems.RadialInventorySystemV4
                             }
                         }
                         selectedProp.IsLocalOnly = EditorGUILayout.Toggle(RISStrings.GetString("local_mode"), selectedProp.IsLocalOnly);
+                        KaiDefaultOutfit.DrawSaved(risAvatar, selectedProp);
                         GUILayout.Space(5);
                         EditorGUILayout.LabelField(RISStrings.GetString("additional_animation"));
                         EditorGUI.BeginChangeCheck();
@@ -358,7 +363,7 @@ namespace YagihataItems.RadialInventorySystemV4
                     }
                     if (group != null && props.Count < maxPropCount && GUI.Button(position, ReorderableListStyle.AddContent, ReorderableListStyle.AddStyle))
                     {
-                        var newProp = new Prop();
+                        var newProp = new Prop { IsDefaultEnabled = KaiDefaultOutfit.Enabled(risAvatar) && group.KaiDefaultGroup };
                         newProp.TargetObjects.Add(null);
                         group.Props.Add(newProp);
                     }

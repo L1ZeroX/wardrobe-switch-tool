@@ -20,6 +20,7 @@ namespace YagihataItems.RadialInventorySystemV4
         [JsonProperty] public GUIDPathPair<VRCAvatarDescriptor> AvatarRoot { get; set; }
         [JsonProperty] public bool UseWriteDefaults { get; set; } = false;
         [JsonProperty] public bool KaiAutoThumbnail { get; set; } = true;
+        [JsonProperty] public bool KaiUseDefaultGroup { get; set; } = false;
         [JsonProperty] private bool OptimizeParameters { get; set; } = true;
         [JsonProperty] private bool ApplyEnableDefault { get; set; } = true;
         [JsonProperty] public List<Group> Groups { get; set; } = new List<Group>();
@@ -109,6 +110,7 @@ namespace YagihataItems.RadialInventorySystemV4
                 if (!Directory.Exists(dirPath))
                     Directory.CreateDirectory(dirPath);
 
+                KaiDefaultOutfit.Enforce(this);
                 YagihataItems.RadialInventorySystemV4.KaiAutoThumbnail.CompletePending(this);
                 KaiGroupThumbnail.CompletePending(this);
                 Version = RIS.CurrentVersion;
@@ -154,6 +156,7 @@ namespace YagihataItems.RadialInventorySystemV4
                     avatar.LastWriteDate = File.GetLastWriteTimeUtc(path);
                 }
                 avatar.ForceReload();
+                KaiDefaultOutfit.Enforce(avatar);
                 return avatar;
             }
             catch (Exception ex)

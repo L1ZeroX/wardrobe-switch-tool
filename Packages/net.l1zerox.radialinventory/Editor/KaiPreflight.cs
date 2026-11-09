@@ -20,6 +20,10 @@ namespace YagihataItems.RadialInventorySystemV4
         public static void Require(Avatar data)
         {
             if (data == null) throw new InvalidOperationException("設定を読み込んでください。");
+            if (KaiDefaultOutfit.Enabled(data))
+                for (int g = 0; g < data.Groups.Count; g++)
+                    if (data.Groups[g].KaiDefaultGroup && !KaiGroupSwitch.Enabled(data, g))
+                        throw new InvalidOperationException("初期衣装の「グループ内の排他を解除」をONにしてください: " + data.Groups[g].Name);
             KaiGroupSwitch.Validate(data);
             if (data.MenuMode == RIS.MenuModeType.Simple && data.Groups.Count > 8)
                 throw new InvalidOperationException("シンプルモードは8グループの固定構成です。多数のグループにはベーシックまたはアドバンスを使用してください。");
