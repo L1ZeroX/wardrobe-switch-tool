@@ -34,6 +34,18 @@ namespace YagihataItems.RadialInventorySystemV4
         {
             return CaptureCore(data, prop, yaw, zoom, focusClothing, null);
         }
+        // Caller owns this temporary texture. Previewing never writes PNGs or changes icon references.
+        public static Texture2D PreviewSelection(Avatar data, System.Collections.Generic.IEnumerable<Prop> selection, bool showAvatar, float yaw = 0, float zoom = 1)
+        {
+            var items = selection.Where(p => p != null).Distinct().ToList();
+            if (items.Count == 0) throw new InvalidOperationException("プレビューするプロップにチェックを入れてください。");
+            var root = data.GetAvatarRoot();
+            if (root == null || items.Any(p => p.TargetObjects.Count == 0 || p.TargetObjects.Any(t => t?.GetObject(root.gameObject) == null)))
+                throw new InvalidOperationException("衣装の参照を確認してください。");
+            var prop = new Prop { TargetObjects = items.SelectMany(p => p.TargetObjects).ToList() };
+            var group = showAvatar ? new Group { Props = items } : null;
+            return CaptureCore(data, prop, yaw, zoom, true, group, true);
+        }
         public static Texture2D CaptureGroup(Avatar data, Group group)
         {
             if (group == null) throw new ArgumentNullException(nameof(group));
@@ -93,7 +105,7 @@ namespace YagihataItems.RadialInventorySystemV4
             }
             return branches.ToArray();
         }
-        static Texture2D CaptureCore(Avatar data, Prop prop, float yaw, float zoom, bool focusClothing, Group fullGroup)
+        static Texture2D CaptureCore(Avatar data, Prop prop, float yaw, float zoom, bool focusClothing, Group fullGroup, bool previewOnly = false)
         {
             bool fullAvatar = fullGroup != null;
             var original = data.GetAvatarRoot();
@@ -245,6 +257,13 @@ namespace YagihataItems.RadialInventorySystemV4
                     GL.sRGBWrite = previousSRGB;
                     RenderTexture.active = previous;
                     RenderTexture.ReleaseTemporary(output);
+                }
+                if (previewOnly)
+                {
+                    texture.hideFlags = HideFlags.HideAndDontSave;
+                    var result = texture;
+                    texture = null; // Transfer ownership; the window destroys it on replacement/close.
+                    return result;
                 }
                 string dir = RIS.WorkFolderPath + "KaiIcons/";
                 Directory.CreateDirectory(dir);

@@ -128,17 +128,91 @@ namespace YagihataItems.RadialInventorySystemV4
     public sealed class KaiPropBundleWindow : EditorWindow
     {
         Avatar data; Group group; readonly HashSet<Prop> selected = new HashSet<Prop>();
-        string mergedName = "", error; Vector2 scroll;
+        string mergedName = "", error; Vector2 scroll, previewScroll;
+        Texture2D previewImage;
+        bool showAvatar, previewPending;
+        int previewSize = 1;
+        float yaw, zoom = 1;
+        double previewAt;
+        string previewError;
+        static readonly string[] Sizes = { "小", "中", "大" };
+        static readonly float[] Pixels = { 128, 256, 384 };
         public static void Open(Avatar data, Group group)
         {
             var window = CreateInstance<KaiPropBundleWindow>(); window.data = data; window.group = group;
-            window.mergedName = group.Name + " まとめ"; window.titleContent = new GUIContent("プロップを合体"); window.minSize = new Vector2(480, 360); window.ShowUtility();
+            window.mergedName = group.Name + " まとめ"; window.titleContent = new GUIContent("プロップを合体"); window.minSize = new Vector2(740, 540);
+            var owner = Resources.FindObjectsOfTypeAll<MainWindow>().FirstOrDefault();
+            var center = owner != null ? owner.position.center : new Vector2(600, 400);
+            window.position = new Rect(center.x - 430, center.y - 300, 860, 600); window.ShowUtility();
+        }
+        void OnEnable() { EditorApplication.update += UpdatePreview; }
+        void OnDisable() { EditorApplication.update -= UpdatePreview; ClearPreview(); }
+        void ClearPreview()
+        {
+            if (previewImage != null) DestroyImmediate(previewImage);
+            previewImage = null;
+        }
+        void RequestPreview()
+        {
+            ClearPreview(); previewError = null;
+            previewPending = selected.Count > 0;
+            previewAt = EditorApplication.timeSinceStartup + 0.15;
+            Repaint();
+        }
+        void UpdatePreview()
+        {
+            if (!previewPending || EditorApplication.timeSinceStartup < previewAt || EditorApplication.isCompiling || EditorApplication.isUpdating) return;
+            previewPending = false;
+            if (data == null || group == null || !data.Groups.Contains(group)) return;
+            selected.RemoveWhere(p => !group.Props.Contains(p));
+            if (selected.Count == 0) { ClearPreview(); Repaint(); return; }
+            try { previewImage = KaiThumbnail.PreviewSelection(data, selected, showAvatar, yaw, zoom); }
+            catch (Exception e) { previewError = e.Message; }
+            Repaint();
+        }
+        void DrawPreview()
+        {
+            EditorGUILayout.LabelField("選んだプロップのプレビュー", EditorStyles.boldLabel);
+            EditorGUI.BeginChangeCheck();
+            showAvatar = GUILayout.Toolbar(showAvatar ? 1 : 0, new[] { "衣装だけ", "アバター全体" }, GUILayout.Height(28)) == 1;
+            if (EditorGUI.EndChangeCheck()) RequestPreview();
+            EditorGUILayout.LabelField("プレビューの大きさ");
+            previewSize = GUILayout.Toolbar(previewSize, Sizes, GUILayout.Height(26));
+            float size = Pixels[previewSize];
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                GUILayout.FlexibleSpace();
+                var rect = GUILayoutUtility.GetRect(size, size, GUILayout.Width(size), GUILayout.Height(size));
+                if (previewImage != null) EditorGUI.DrawTextureTransparent(rect, previewImage, ScaleMode.ScaleToFit);
+                else
+                {
+                    GUI.Box(rect, GUIContent.none);
+                    GUI.Label(rect, previewPending ? "プレビューを作成中…" : "パーツにチェックを入れると\nここに表示されます。", new GUIStyle(EditorStyles.centeredGreyMiniLabel) { wordWrap = true });
+                }
+                GUILayout.FlexibleSpace();
+            }
+            float previousWidth = EditorGUIUtility.labelWidth;
+            EditorGUIUtility.labelWidth = 62;
+            EditorGUI.BeginChangeCheck();
+            yaw = EditorGUILayout.Slider("向き", yaw, -180, 180);
+            zoom = EditorGUILayout.Slider("ズーム", zoom, 0.5f, 3);
+            if (EditorGUI.EndChangeCheck()) RequestPreview();
+            EditorGUIUtility.labelWidth = previousWidth;
+            using (new EditorGUI.DisabledScope(selected.Count == 0))
+                if (GUILayout.Button("プレビューを更新")) RequestPreview();
+            if (!string.IsNullOrEmpty(previewError)) EditorGUILayout.HelpBox(previewError, MessageType.Warning);
+            EditorGUILayout.LabelField("元のアバターやサムネイルは変更しません。", EditorStyles.wordWrappedMiniLabel);
         }
         void OnGUI()
         {
             if (data == null || group == null || !data.Groups.Contains(group)) { EditorGUILayout.HelpBox("対象グループを選び直してください。", MessageType.Info); return; }
             EditorGUILayout.HelpBox("選んだパーツをひとつのスイッチにまとめます。あとから「分離する」で元に戻せます。", MessageType.Info);
             mergedName = EditorGUILayout.TextField("まとめたプロップ名", mergedName);
+            if (selected.RemoveWhere(p => !group.Props.Contains(p)) > 0) RequestPreview();
+            using (new EditorGUILayout.HorizontalScope())
+            {
+            using (new EditorGUILayout.VerticalScope(GUILayout.ExpandWidth(true)))
+            {
             scroll = EditorGUILayout.BeginScrollView(scroll);
             foreach (var prop in group.Props)
             {
@@ -146,11 +220,20 @@ namespace YagihataItems.RadialInventorySystemV4
                 using (new EditorGUI.DisabledScope(problem != null))
                 {
                     bool enabled = EditorGUILayout.ToggleLeft(new GUIContent(prop.GetPropName(data), problem ?? "合体するプロップを選びます。"), selected.Contains(prop), GUILayout.Height(26));
-                    if (enabled) selected.Add(prop); else selected.Remove(prop);
+                    bool changed = enabled ? selected.Add(prop) : selected.Remove(prop);
+                    if (changed) RequestPreview();
                 }
                 if (problem != null) EditorGUILayout.LabelField(problem, EditorStyles.wordWrappedMiniLabel);
             }
             EditorGUILayout.EndScrollView();
+            }
+            using (new EditorGUILayout.VerticalScope(GUILayout.Width(410)))
+            {
+                previewScroll = EditorGUILayout.BeginScrollView(previewScroll);
+                DrawPreview();
+                EditorGUILayout.EndScrollView();
+            }
+            }
             if (!string.IsNullOrEmpty(error)) EditorGUILayout.HelpBox(error, MessageType.Error);
             using (new EditorGUI.DisabledScope(selected.Count < 2))
                 if (GUILayout.Button(selected.Count + "個を合体する", GUILayout.Height(32)))
