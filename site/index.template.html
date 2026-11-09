@@ -1,22 +1,43 @@
 <!doctype html>
-<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>衣装簡単切替ツール — VCCで導入</title>
-<style>
-:root{color-scheme:dark;font-family:system-ui,sans-serif;background:#111522;color:#edf0fa}body{max-width:740px;margin:auto;padding:64px 24px;line-height:1.85}h1{font-size:clamp(28px,5vw,42px);line-height:1.3}h2{font-size:21px;margin-top:36px}a{color:#adc5ff}a.button{display:inline-block;background:#baceff;color:#11223f;border-radius:12px;padding:13px 24px;font-weight:700;text-decoration:none;margin:12px 8px 16px 0}code{overflow-wrap:anywhere;background:#20273a;padding:4px 7px;border-radius:5px}.muted,footer{color:#adb7ca}footer{margin-top:48px;font-size:13px;border-top:1px solid #343c50;padding-top:18px}li{margin:9px 0}
-</style></head><body>
-<p class="muted">VRChatアバター用 · バージョン {{VERSION}}</p>
-<h1>衣装簡単切替ツール</h1>
-<p>衣装を個別に、またはグループごとに切り替え。衣装の透過サムネイルと、着替えた全身画像をExpressionsメニューへ。</p>
-<a class="button" href="{{ADD_URL}}">VCCに追加</a>
-<p>VCCで追加を確認し、対象プロジェクトの「Manage Project」から本ツールをインストールしてください。</p>
-<h2>ボタンで開かない場合</h2>
-<p>VCCの Settings → Packages → Add Repository に、次のURLを貼り付けます。</p>
-<p><code>{{LISTING_URL}}</code></p>
-<h2>初めて使う方へ</h2>
-<ul><li>Unity 2022.3、VRChat Avatars SDK 3.10.3以上・3.11.0未満が対象です。</li>
-<li>Unityの「衣装簡単切替ツール → エディター」から開きます。</li>
-<li>Radial Inventory System V4の改変版です。元のVPMパッケージを置き換えます。移行前にプロジェクトをバックアップしてください。</li>
-<li>Assets内に旧版のスクリプトを入れている場合は、そのまま併用せず、下の導入手順を確認してください。</li></ul>
-<p><a href="{{REPOSITORY_URL}}#readme">導入・更新・復元の手順</a> · <a href="{{ZIP_URL}}">VPMパッケージZIP</a></p>
-<footer>Based on Radial Inventory System V4 4.6.0 / Copyright 2020 Yagihata / MIT License.<br>改変版: L1ZeroX。アバター・衣装モデルは含まれていません。原作者やVRChat公式による配布ではありません。</footer>
+<html lang="ja">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="VRChatの衣装を、個別にもグループごとにも。画像で確認しながら登録・合体・着替えができるUnityエディターツール。VCCから導入・更新できます。">
+<meta name="theme-color" content="#101522">
+<title>衣装簡単切替ツール — 画面でわかる機能紹介・VCCで導入</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<a class="skip" href="#main">本文へ移動</a>
+<header class="header wrap"><a class="brand" href="./"><span class="brand-mark" aria-hidden="true">衣</span>衣装簡単切替ツール</a><nav aria-label="メインナビゲーション"><a href="#features">機能を見る</a><a href="#install">導入方法</a><a href="{{REPOSITORY_URL}}">GitHub ↗</a></nav></header>
+<main id="main">
+<section class="hero wrap" aria-labelledby="hero-title">
+<p class="eyebrow"><span class="dot" aria-hidden="true"></span>VRChatアバター用 Unityエディターツール</p>
+<h1 id="hero-title">衣装を選ぶ。<br>着替えが、<span>もっと手軽に。</span></h1>
+<p class="lead">パーツひとつの着脱から、衣装まるごとの切り替えまで。<br class="desktop-break">画像で確認しながら、いつものアバターに着替えを追加できます。</p>
+<div class="actions"><a class="button primary" href="{{ADD_URL}}">VCCに追加 ↗</a><a class="button secondary" href="#install">導入手順を見る ↓</a></div>
+<p class="release">最新版 <strong>v{{VERSION}}</strong><span>Unity 2022.3対応</span><span>オリジナル版の別途導入は不要</span></p>
+</section>
+<section class="showcase wrap" aria-labelledby="screen-title">
+<div class="section-top"><h2 id="screen-title">ひとつの画面で、衣装を整理。</h2><span class="image-hint">画像を押すと拡大できます</span></div>
+<figure class="screen-frame"><button class="image-button" type="button" data-image="assets/editor.jpg" data-caption="メイン編集画面：左でグループ、中央で衣装、右で詳細とサムネイルを確認できます。" aria-label="メイン編集画面を拡大"><img src="assets/editor.jpg" width="1122" height="784" alt="衣装簡単切替ツールの編集画面。グループの全身画像、プロップ一覧、選択した衣装の透過サムネイルが3列に並んでいます。" fetchpriority="high"><span class="zoom-label" aria-hidden="true">＋ 拡大表示</span></button><figcaption>実際の編集画面（v1.9.0）。掲載画像は撮影時のもので、最新版では一部の表示が異なります。</figcaption></figure>
+<ol class="screen-guide"><li><span class="number">01</span><div><h3>グループを選ぶ</h3><p>全身画像を見ながら、衣装セットを選択。</p></div></li><li><span class="number">02</span><div><h3>衣装を整理する</h3><p>パーツを追加・合体して、切り替え方を設定。</p></div></li><li><span class="number">03</span><div><h3>画像と詳細を確認</h3><p>透過サムネイルや初期状態を確認して適用。</p></div></li></ol>
+</section>
+<section id="features" class="features wrap" aria-labelledby="feature-title">
+<div class="section-heading"><p class="eyebrow">できること</p><h2 id="feature-title">衣装に合わせて、<br>使いやすい切り替え方を。</h2></div>
+<div class="feature-row"><figure class="feature-image"><button class="image-button" type="button" data-image="assets/preview.jpg" data-caption="合体前のプレビュー。「衣装だけ／アバター全体」と表示サイズを選び、向き・ズームも調整できます。" aria-label="合体前の衣装プレビューを拡大"><img src="assets/preview.jpg" width="720" height="582" loading="lazy" alt="プロップ合体画面。選んだ上着だけを透過背景で表示し、衣装だけ・アバター全体、小・中・大を選択するプレビュー。"><span class="zoom-label" aria-hidden="true">＋ 拡大表示</span></button><figcaption>プロップ合体のプレビュー画面（v1.10.0）</figcaption></figure><div class="feature-copy"><span class="feature-index">01 / プレビューと合体</span><h3>まとめて着たいパーツを、<br>ひとつのスイッチに。</h3><p>複数のプロップを合体して、一度にON/OFF。あとから「分離する」で個別のプロップに戻せます。</p><ul class="check-list"><li>合体するパーツを画像で確認</li><li>「衣装だけ／アバター全体」を切り替え</li><li>小・中・大の表示サイズ、向き・ズームを調整</li></ul></div></div>
+<div class="feature-row reverse"><figure class="feature-image selection-image"><button class="image-button" type="button" data-image="assets/parts.jpg" data-caption="衣装の自動登録。通常パーツは自動で追加し、サイズ違いなどの候補は自分で選択できます。" aria-label="登録する衣装パーツの選択画面を拡大"><img src="assets/parts.jpg" width="522" height="582" loading="lazy" alt="衣装パーツの登録画面。big_breastとsmall_breastのインナーを選べ、通常の上着とスカートは自動登録候補としてチェックされています。"><span class="zoom-label" aria-hidden="true">＋ 拡大表示</span></button><figcaption>衣装の自動登録・候補選択画面</figcaption></figure><div class="feature-copy"><span class="feature-index">02 / 衣装の自動登録</span><h3>いつものパーツは自動で。<br>サイズ違いは、自分で選ぶ。</h3><p>衣装をグループへ追加すると、パーツを見つけてプロップへ登録。インナーのサイズ違いなど、選択が必要な候補は確認画面から選べます。</p><p class="subtle">候補の判定は名前をもとに行います。衣装の構成に合わせて、登録するパーツを確認できます。</p></div></div>
+<div class="more-features"><article><span class="small-label">着替え</span><h3>個別にも、まとめても。</h3><p>Expressionsメニューからパーツの着脱とグループ単位の着替えを操作。他の衣装を自動でOFFにする設定も使えます。</p></article><article><span class="small-label">記憶</span><h3>脱いだ状態を、覚えておく。</h3><p>他の衣装から戻っても、個別に脱いだ状態を復元。記憶のON/OFFも選べます。記憶はアバターの再読み込みまで有効です。</p></article><article><span class="small-label">画像</span><h3>メニューでも、見て選ぶ。</h3><p>衣装だけの透過サムネイルと、グループごとの全身画像をPNGで作成。Expressionsメニューのアイコンにも反映できます。</p></article></div>
+<aside class="experimental"><span class="tag">実験機能</span><div><h3>靴の着脱に、ヒール補正を連動。</h3><p>Shoesを含む衣装とヒール用ブレンドシェイプを自動検出。履いたときの値は0〜100、脱いだときは0。手動指定・OFFにも対応します。初期状態はOFFです。</p></div></aside>
+</section>
+<section id="install" class="install" aria-labelledby="install-title"><div class="wrap">
+<div class="section-top"><div><p class="eyebrow">使い始める</p><h2 id="install-title">VCCから、追加も更新も。</h2></div><a class="button primary" href="{{ADD_URL}}">VCCに追加 ↗</a></div>
+<ol class="install-steps"><li><span class="number">1</span><h3>リポジトリを追加</h3><p>「VCCに追加」を押して、VCC側で追加を確認します。</p></li><li><span class="number">2</span><h3>プロジェクトへ導入</h3><p>対象プロジェクトの「Manage Project」から、本ツールをインストールします。</p></li><li><span class="number">3</span><h3>Unityで開く</h3><p>上部の「衣装簡単切替ツール → エディター」から始められます。</p></li></ol>
+<details class="manual-install"><summary>ボタンでVCCが開かない場合</summary><p>VCCの Settings → Packages → Add Repository に、次のURLを貼り付けてください。</p><div class="copy-row"><input id="listing-url" aria-label="VCCリポジトリURL" readonly value="{{LISTING_URL}}"><button class="button secondary" id="copy-url" type="button">URLをコピー</button></div><p id="copy-status" role="status" aria-live="polite"></p></details>
+<div class="requirements"><h3>導入前に確認</h3><ul><li>Unity 2022.3 / VRChat Avatars SDK 3.10.3以上・3.11.0未満が対象です。</li><li>Radial Inventory System V4の改変版です。元のVPMパッケージを置き換えます。移行前にプロジェクトをバックアップしてください。</li><li>Assets内に旧版のスクリプトを入れている場合は、併用する前に導入手順を確認してください。</li></ul><div class="text-links"><a href="{{REPOSITORY_URL}}#readme">導入・更新・復元の手順 ↗</a><a href="{{ZIP_URL}}">VPMパッケージZIP ↓</a><a href="{{REPOSITORY_URL}}/releases">更新履歴 ↗</a></div></div>
+</div></section>
+</main>
+<footer class="wrap"><div class="footer-top"><strong>衣装簡単切替ツール</strong><a href="https://x.com/L1ZE_ragram1">X @L1ZE_ragram1 ↗</a></div><p>Based on Radial Inventory System V4 4.6.0 / Copyright 2020 Yagihata / MIT License.<br>改変版: L1ZeroX。アバター・衣装モデルは含まれていません。原作者やVRChat公式による配布ではありません。</p></footer>
+<dialog id="image-viewer" aria-labelledby="viewer-caption"><div class="viewer-bar"><span>画面を拡大表示</span><button type="button" id="close-viewer" aria-label="拡大画像を閉じる">閉じる ×</button></div><img id="viewer-image" alt=""><p id="viewer-caption"></p></dialog>
+<script src="assets/site.js" defer></script>
 </body></html>

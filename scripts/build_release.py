@@ -5,6 +5,7 @@ import html
 import json
 from pathlib import Path
 import re
+import shutil
 import urllib.parse
 import urllib.request
 import urllib.error
@@ -111,6 +112,7 @@ def build(output, repository=None, previous=None, fetch_previous=False):
                            "REPOSITORY_URL": f"https://github.com/{repository}", "ZIP_URL": published_manifest["url"]}.items():
             page = page.replace("{{" + key + "}}", html.escape(value, quote=True))
         (site / "index.html").write_text(page, encoding="utf-8")
+        shutil.copytree(ROOT / "site/assets", site / "assets", dirs_exist_ok=True)
         (site / ".nojekyll").write_text("", encoding="utf-8")
         report.update(listingGenerated=True, listingUrl=listing_url)
     write_json(output / "verification.json", report)
