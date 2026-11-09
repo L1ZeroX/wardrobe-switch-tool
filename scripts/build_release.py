@@ -108,7 +108,9 @@ def build(output, repository=None, previous=None, fetch_previous=False):
         write_json(output / f"{package_id}-{version}.json", published_manifest)
         add_url = "vcc://vpm/addRepo?url=" + urllib.parse.quote(listing_url, safe="")
         page = (ROOT / "site/index.template.html").read_text(encoding="utf-8")
+        asset_version = hashlib.sha256(b"".join(p.read_bytes() for p in sorted((ROOT / "site/assets").iterdir()) if p.is_file())).hexdigest()[:12]
         for key, value in {"VERSION": version, "LISTING_URL": listing_url, "ADD_URL": add_url,
+                           "ASSET_VERSION": asset_version,
                            "REPOSITORY_URL": f"https://github.com/{repository}", "ZIP_URL": published_manifest["url"]}.items():
             page = page.replace("{{" + key + "}}", html.escape(value, quote=True))
         (site / "index.html").write_text(page, encoding="utf-8")
