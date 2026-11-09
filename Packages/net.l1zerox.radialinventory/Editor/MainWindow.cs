@@ -144,6 +144,7 @@ namespace YagihataItems.RadialInventorySystemV4
                         GUILayout.FlexibleSpace();
                         if (GUILayout.Button(new GUIContent("設定…", "表示する編集モードを選びます。"), KaiEditorUI.Button, GUILayout.Width(90))) KaiModeSettingsWindow.Open();
                         if (GUILayout.Button(new GUIContent("補助ツール…", "検索・衣装の一括登録・移行を開きます。"), KaiEditorUI.Button, GUILayout.Width(148))) KaiWardrobeWindow.Open(risAvatar);
+                        if (GUILayout.Button("胸・衣装補正…", KaiEditorUI.Button, GUILayout.Width(136))) KaiChestFitWindow.Open(risAvatar?.GetAvatarRoot()?.gameObject);
                         GUILayout.Space(6);
                     }
                     GUILayout.Space(4);
