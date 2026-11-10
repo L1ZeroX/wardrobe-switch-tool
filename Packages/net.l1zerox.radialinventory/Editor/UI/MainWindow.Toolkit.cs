@@ -18,7 +18,6 @@ namespace YagihataItems.RadialInventorySystemV4
         [SerializeField] VRCAvatarDescriptor toolkitAvatar;
         [SerializeField] int toolkitGroup, toolkitProp;
         [SerializeField] bool toolkitLegacy;
-        [SerializeField] int toolkitPage; // 0 wardrobe, 1 clothes, 2 prop, 3 avatar, 4 tools, 5 group settings
         ListView groupView, propView;
         List<Prop> visibleProps = new List<Prop>();
         string propSearch = "", structure = "", diagnosticText = "";
@@ -48,21 +47,15 @@ namespace YagihataItems.RadialInventorySystemV4
                 EnsureToolkitModel();
                 UI<Label>("title").text = "衣装簡単切替ツール " + RIS.CurrentVersion.Replace("ris_kai", "");
                 var avatar = UI<ObjectField>("avatar");avatar.objectType = typeof(VRCAvatarDescriptor);avatar.allowSceneObjects = true;
-                avatar.style.flexShrink=1;
+                avatar.style.flexBasis=360;avatar.style.flexShrink=1;
                 avatar.RegisterValueChangedCallback(e => RunToolkit(() => SelectToolkitAvatar(e.newValue as VRCAvatarDescriptor)));
                 Wire("use-selection", () => SelectToolkitAvatar(Selection.activeGameObject?.GetComponentInParent<VRCAvatarDescriptor>()));
                 Wire("export", ExportToolkit);Wire("import", ImportToolkit);
                 Wire("settings", KaiModeSettingsWindow.Open);Wire("helpers", () => KaiWardrobeWindow.Open(risAvatar));
-                Wire("nav-wardrobe", () => ShowToolkitPage(0));
-                Wire("nav-setup", () => ShowToolkitPage(3));Wire("avatar-shortcut", () => ShowToolkitPage(3));
-                Wire("nav-tools", () => ShowToolkitPage(4));Wire("heels", () => KaiHeelWindow.Open(risAvatar));
-                Wire("edit-group", () => ShowToolkitPage(5));
-                Wire("back", () => ShowToolkitPage(toolkitPage==2||toolkitPage==5?1:0));
-                rootVisualElement.RegisterCallback<GeometryChangedEvent>(e=>rootVisualElement.EnableInClassList("narrow",e.newRect.width<850));
                 Wire("chest", () => KaiChestFitWindow.OpenRegistered(risAvatar));
                 Wire("legacy", () => { toolkitLegacy = !toolkitLegacy; RefreshToolkit(); });
                 Wire("apply", ApplyToolkit);Wire("detach", () => tabItems[risAvatar.MenuMode].RemoveFromAvatar(ref risAvatar));
-                Wire("add-group", () => { if (risAvatar.Groups.Count >= 8) return;risAvatar.Groups.Add(new Group { Name = "グループ" + risAvatar.Groups.Count });toolkitGroup = risAvatar.Groups.Count-1;toolkitProp = 0;toolkitPage=5;RefreshToolkit(); });
+                Wire("add-group", () => { if (risAvatar.Groups.Count >= 8) return;risAvatar.Groups.Add(new Group { Name = "グループ" + risAvatar.Groups.Count });toolkitGroup = risAvatar.Groups.Count-1;toolkitProp = 0;RefreshToolkit(); });
                 Wire("remove-group", () => { if (ToolkitGroup == null) return;KaiReferences.RemoveGroup(risAvatar,toolkitGroup);toolkitGroup=Mathf.Min(toolkitGroup,risAvatar.Groups.Count-1);toolkitProp=0;RefreshToolkit(); });
                 Wire("add-prop", () => { var g=ToolkitGroup;if(g==null||g.Props.Count>=255)return;var p=new Prop { IsDefaultEnabled=KaiDefaultOutfit.Enabled(risAvatar)&&g.KaiDefaultGroup };p.TargetObjects.Add(null);g.Props.Add(p);toolkitProp=g.Props.Count-1;RefreshToolkit(); });
                 Wire("remove-prop", () => { if(ToolkitProp==null)return;KaiReferences.RemoveProp(risAvatar,ToolkitGroup,toolkitProp);toolkitProp=Mathf.Min(toolkitProp,ToolkitGroup.Props.Count-1);RefreshToolkit(); });
@@ -79,7 +72,7 @@ namespace YagihataItems.RadialInventorySystemV4
                     KaiReferences.PropMoved(risAvatar,group,from,to);toolkitProp=to;RefreshToolkit();
                 });
                 UI<ToolbarSearchField>("prop-search").RegisterValueChangedCallback(e => { propSearch=e.newValue??"";RefreshProps(); });
-                BuildCredit();RefreshToolkit();ShowToolkitPage(avatarRoot==null?3:toolkitPage);
+                BuildCredit();RefreshToolkit();
                 toolkitPoll=rootVisualElement.schedule.Execute(PollToolkit).Every(500);
             }
             catch(Exception error)
@@ -147,30 +140,7 @@ namespace YagihataItems.RadialInventorySystemV4
             groupView.itemsSource=risAvatar.Groups;groupView.Rebuild();
             toolkitGroup=risAvatar.Groups.Count==0?-1:Mathf.Clamp(toolkitGroup,0,risAvatar.Groups.Count-1);
             groupView.SetSelectionWithoutNotify(toolkitGroup<0?new int[0]:new[]{toolkitGroup});
-            RefreshSelection();ShowToolkitPage(toolkitPage);structure=ToolkitStructure();UpdateToolkitStatus();
-        }
-        void ShowToolkitPage(int page)
-        {
-            if(UI<VisualElement>("page-home")==null)return;
-            if((page==1||page==2||page==5)&&ToolkitGroup==null)page=0;
-            if(page==2&&ToolkitProp==null)page=1;
-            toolkitPage=Mathf.Clamp(page,0,5);
-            bool basic=risAvatar.MenuMode==RIS.MenuModeType.Basic;
-            UI<VisualElement>("basic-editor").style.display=basic&&page!=3&&page!=4?DisplayStyle.Flex:DisplayStyle.None;
-            var names=new[]{"page-home","page-group","page-prop","page-setup","page-tools","page-group-settings"};
-            for(int i=0;i<names.Length;i++)UI<VisualElement>(names[i]).style.display=i==page?DisplayStyle.Flex:DisplayStyle.None;
-            UI<VisualElement>("compatible-tab").style.display=!basic&&page!=3&&page!=4?DisplayStyle.Flex:DisplayStyle.None;
-            string[] titles={"ワードローブ",ToolkitGroup?.Name??"衣装",ToolkitProp?.GetPropName(risAvatar)??"衣装の詳細","アバター設定","補正・ツール","グループ設定"};
-            string[] subtitles={risAvatar.Groups.Count+" グループ · グループを開いて衣装を編集",(ToolkitGroup?.Props.Count??0)+" 点の衣装 · 開くボタンで個別に編集","画像・初期状態・動作を設定","対象アバターと着替えの共通設定","プレビューを見ながら、衣装を調整",ToolkitGroup?.Name??""};
-            UI<Label>("page-title").text=!basic&&page!=3&&page!=4?KaiModeSettings.Label(risAvatar.MenuMode)+"モード":titles[page];
-            UI<Label>("page-subtitle").text=subtitles[page];
-            UI<Label>("breadcrumb").text=page==2?"衣装 / "+ToolkitGroup?.Name:page==1||page==5?"衣装 / グループ":"衣装簡単切替ツール";
-            UI<Button>("back").style.display=page==1||page==2||page==5?DisplayStyle.Flex:DisplayStyle.None;
-            UI<Button>("avatar-shortcut").text=avatarRoot!=null?"対象アバター  ·  "+avatarRoot.name+"  ›":"対象アバターを選択  ›";
-            UI<Label>("empty-groups").style.display=risAvatar.Groups.Count==0?DisplayStyle.Flex:DisplayStyle.None;
-            UI<Button>("nav-wardrobe").EnableInClassList("nav-selected",page!=3&&page!=4);
-            UI<Button>("nav-setup").EnableInClassList("nav-selected",page==3);
-            UI<Button>("nav-tools").EnableInClassList("nav-selected",page==4);
+            RefreshSelection();structure=ToolkitStructure();UpdateToolkitStatus();
         }
         void BuildModes()
         {
@@ -186,20 +156,20 @@ namespace YagihataItems.RadialInventorySystemV4
             var host=UI<VisualElement>("global-settings");host.Clear();host.SetEnabled(avatarRoot!=null&&!EditorApplication.isPlaying);
             host.style.flexShrink=0;
             var row=new VisualElement();row.AddToClassList("toolbar");host.Add(row);
-            var auto=new Toggle("衣装追加時に自動撮影"){value=risAvatar.KaiAutoThumbnail};auto.RegisterValueChangedCallback(e=>risAvatar.KaiAutoThumbnail=e.newValue);row.Add(auto);StyleSwitch(auto);
-            var wd=new Toggle("Write Defaultsを使用"){value=risAvatar.UseWriteDefaults};wd.RegisterValueChangedCallback(e=>risAvatar.UseWriteDefaults=e.newValue);row.Add(wd);StyleSwitch(wd);
+            var auto=new Toggle("衣装追加時に自動撮影"){value=risAvatar.KaiAutoThumbnail};auto.style.width=240;auto.RegisterValueChangedCallback(e=>risAvatar.KaiAutoThumbnail=e.newValue);row.Add(auto);
+            var wd=new Toggle("Write Defaultsを使用"){value=risAvatar.UseWriteDefaults};wd.style.width=220;wd.RegisterValueChangedCallback(e=>risAvatar.UseWriteDefaults=e.newValue);row.Add(wd);
             if(risAvatar.MenuMode!=RIS.MenuModeType.Simple)
             {
                 var names=new List<string>{"個別の初期状態を使う","なし（すべてOFF）"};names.AddRange(risAvatar.Groups.Select((g,i)=>(i+1)+": "+g.Name));
                 int selected=!risAvatar.KaiUseDefaultGroup?0:risAvatar.Groups.FindIndex(g=>g.KaiDefaultGroup)+2;
                 var defaults=new PopupField<string>("初期衣装",names,selected);
-
+                defaults.style.flexGrow=1;defaults.style.flexBasis=300;
                 defaults.RegisterValueChangedCallback(e=>RunToolkit(()=>{if(defaults.index==0)risAvatar.KaiUseDefaultGroup=false;else KaiDefaultOutfit.Select(risAvatar,defaults.index==1?null:risAvatar.Groups[defaults.index-2]);BuildPropDetails();}));row.Add(defaults);
             }
             if(risAvatar.MenuMode!=RIS.MenuModeType.Simple)
             {
-                var heels=new VisualElement();heels.AddToClassList("toolbar");heels.style.flexDirection=FlexDirection.Column;heels.style.alignItems=Align.Stretch;host.Add(heels);
-                var enabled=Toggle(heels,"実験：靴とヒール補正を連動",risAvatar.KaiExperimentalHeels,v=>{risAvatar.KaiExperimentalHeels=v;BuildGlobalSettings();BuildPropDetails();});
+                var heels=new VisualElement();heels.AddToClassList("toolbar");heels.style.flexWrap=Wrap.NoWrap;heels.style.minHeight=32;host.Add(heels);
+                var enabled=Toggle(heels,"実験：靴とヒール補正を連動",risAvatar.KaiExperimentalHeels,v=>{risAvatar.KaiExperimentalHeels=v;BuildGlobalSettings();BuildPropDetails();});enabled.style.flexGrow=1;enabled.style.flexBasis=300;enabled.style.flexShrink=1;
                 heels.Add(new Button(()=>KaiHeelWindow.Open(risAvatar)){text="ヒール補正を調整…"});
                 if(risAvatar.KaiExperimentalHeels){var links=KaiHeelLink.Collect(risAvatar);host.Add(new HelpBox("ヒール連動対象："+links.Count+"件／要設定："+links.Count(l=>l.Error!=null)+"件。調整画面で確認できます。",HelpBoxMessageType.Info));}
             }
@@ -207,16 +177,9 @@ namespace YagihataItems.RadialInventorySystemV4
         }
         void SetupList(ListView list,bool groups)
         {
-            list.fixedItemHeight=104;list.selectionType=SelectionType.Single;list.reorderable=true;list.reorderMode=ListViewReorderMode.Animated;
+            list.fixedItemHeight=42;list.selectionType=SelectionType.Single;list.reorderable=true;list.reorderMode=ListViewReorderMode.Animated;
             list.makeItem=()=> {
-                var row=new VisualElement();row.AddToClassList("list-row");row.Add(new Image {scaleMode=ScaleMode.ScaleToFit});
-                var copy=new VisualElement();copy.AddToClassList("row-copy");row.Add(copy);
-                var name=new Label();name.AddToClassList("row-name");copy.Add(name);
-                var description=new Label();description.AddToClassList("row-description");copy.Add(description);
-                var open=new Button(()=>RunToolkit(()=>{
-                    if(groups){toolkitGroup=risAvatar.Groups.IndexOf(row.userData as Group);toolkitProp=0;groupView.SetSelectionWithoutNotify(new[]{toolkitGroup});RefreshSelection();ShowToolkitPage(1);}
-                    else {toolkitProp=ToolkitGroup.Props.IndexOf(row.userData as Prop);propView.SetSelectionWithoutNotify(new[]{visibleProps.IndexOf(ToolkitProp)});BuildPropDetails();ShowToolkitPage(2);}
-                })){text="開く ›",tooltip=groups?"グループの衣装を編集":"衣装の詳細を編集"};row.Add(open);
+                var row=new VisualElement();row.AddToClassList("list-row");row.Add(new Image {scaleMode=ScaleMode.ScaleToFit});row.Add(new Label());
                 if(groups)
                 {
                     row.RegisterCallback<DragUpdatedEvent>(e=>{if(DragAndDrop.objectReferences.OfType<GameObject>().Any()){DragAndDrop.visualMode=DragAndDropVisualMode.Copy;e.StopPropagation();}});
@@ -225,21 +188,20 @@ namespace YagihataItems.RadialInventorySystemV4
                 return row;
             };
             list.bindItem=(row,i)=> {
-                if(groups){var g=risAvatar.Groups[i];row.userData=g;row.Q<Label>(className:"row-name").text=string.IsNullOrEmpty(g.Name)?"グループ"+i:g.Name;row.Q<Label>(className:"row-description").text=g.Props.Count+" 点の衣装"+(g.KaiDefaultGroup&&risAvatar.KaiUseDefaultGroup?"  ·  初期衣装":"");row.Q<Image>().image=g.Icon?.GetObject()??KaiPackageResources.Load<Texture2D>("Runtime/Textures/group_icon_v4.png");}
-                else {var p=visibleProps[i];row.userData=p;row.Q<Label>(className:"row-name").text=p.GetPropName(risAvatar)??"衣装";row.Q<Label>(className:"row-description").text=(p.IsDefaultEnabled?"初期状態 ON":"初期状態 OFF")+(KaiPropBundle.IsMerged(p)?"  ·  合体済み":"");row.Q<Image>().image=p.Icon?.GetObject()??KaiPackageResources.Load<Texture2D>("Runtime/Textures/dresser_icon.png");}
+                if(groups){var g=risAvatar.Groups[i];row.userData=g;row.Q<Label>().text=string.IsNullOrEmpty(g.Name)?"グループ"+i:g.Name;row.Q<Image>().image=g.Icon?.GetObject()??KaiPackageResources.Load<Texture2D>("Runtime/Textures/group_icon_v4.png");}
+                else {var p=visibleProps[i];row.userData=p;row.Q<Label>().text=p.GetPropName(risAvatar)??"衣装";row.Q<Image>().image=p.Icon?.GetObject()??KaiPackageResources.Load<Texture2D>("Runtime/Textures/dresser_icon.png");}
             };
         }
-        void RefreshSelection(){BuildGroupSettings();RefreshProps();BuildPropDetails();ShowToolkitPage(toolkitPage);}
+        void RefreshSelection(){BuildGroupSettings();RefreshProps();BuildPropDetails();}
         void RefreshProps()
         {
             visibleProps=ToolkitGroup?.Props.Where(p=>string.IsNullOrEmpty(propSearch)||(p.GetPropName(risAvatar)??"").IndexOf(propSearch,StringComparison.OrdinalIgnoreCase)>=0).ToList()??new List<Prop>();
             propView.itemsSource=visibleProps;propView.reorderable=propSearch.Length==0;propView.Rebuild();
-            UI<Label>("empty-props").style.display=visibleProps.Count==0?DisplayStyle.Flex:DisplayStyle.None;
             int index=visibleProps.IndexOf(ToolkitProp);propView.SetSelectionWithoutNotify(index<0?new int[0]:new[]{index});
         }
         void BuildGroupSettings()
         {
-            var host=UI<VisualElement>("group-settings");host.Clear();var picture=UI<VisualElement>("group-picture");picture.Clear();var registration=UI<VisualElement>("registration-tools");registration.Clear();var g=ToolkitGroup;if(g==null)return;
+            var host=UI<ScrollView>("group-settings");host.Clear();var picture=UI<ScrollView>("group-picture");picture.Clear();var g=ToolkitGroup;if(g==null)return;
             Text(host,"グループ名",g.Name,v=>{g.Name=v;groupView.RefreshItems();BuildGlobalSettings();});
             Object<Texture2D>(host,"メニュー画像",g.Icon.GetObject(),false,v=>g.Icon.SetObject(v));
             var mode=new EnumField("排他モード",risAvatar.GetExclusiveMode((RIS.ExclusiveGroupType)toolkitGroup));
@@ -250,9 +212,8 @@ namespace YagihataItems.RadialInventorySystemV4
             Toggle(fold,"ほかの衣装を自動OFF",g.KaiTurnOffOtherGroups,v=>g.KaiTurnOffOtherGroups=v);
             Toggle(fold,"ほかの衣装へ切替えても保持",!g.KaiIncludeInOutfitSwitch,v=>g.KaiIncludeInOutfitSwitch=!v);
             Toggle(fold,"個別の着脱状態を記憶",g.KaiRememberPropStates,v=>g.KaiRememberPropStates=v);
-            host.Add(new IMGUIContainer(()=>KaiDefaultOutfit.DrawName(risAvatar,g)));
-            registration.Add(new IMGUIContainer(()=>{KaiOutfitImport.Draw(risAvatar,g);KaiPropBundle.Draw(risAvatar,g,ToolkitProp);}));
-            var image=new Image{name="group-image",image=g.Icon?.GetObject(),scaleMode=ScaleMode.ScaleToFit};image.style.height=240;picture.Add(image);
+            host.Add(new IMGUIContainer(()=>{KaiDefaultOutfit.DrawName(risAvatar,g);KaiOutfitImport.Draw(risAvatar,g);KaiPropBundle.Draw(risAvatar,g,ToolkitProp);}));
+            var image=new Image{name="group-image",image=g.Icon?.GetObject(),scaleMode=ScaleMode.ScaleToFit};image.style.height=220;picture.Add(image);
             picture.Add(new Button(()=>RunToolkit(()=>KaiGroupThumbnail.Request(risAvatar,g,true))){text="全身を撮影・撮り直す"});
         }
         void BuildPropDetails()
@@ -262,7 +223,7 @@ namespace YagihataItems.RadialInventorySystemV4
             p.ExclusiveGroup=exclusive==RIS.ExclusiveModeType.None?RIS.ExclusiveGroupType.None:(RIS.ExclusiveGroupType)toolkitGroup;
             Text(host,"プロップ名",p.Name,v=>{p.Name=v;propView.RefreshItems();});
             Object<Texture2D>(host,"メニュー画像",p.Icon.GetObject(),false,v=>p.Icon.SetObject(v));
-            var image=new Image{name="prop-image",image=p.Icon.GetObject(),scaleMode=ScaleMode.ScaleToFit};image.style.height=240;host.Add(image);
+            var image=new Image{name="prop-image",image=p.Icon.GetObject(),scaleMode=ScaleMode.ScaleToFit};image.style.height=180;host.Add(image);
             host.Add(new Button(()=>RunToolkit(()=>KaiThumbnail.Capture(risAvatar,p,0,1))){text="衣装だけを撮影・撮り直す"});
             host.Add(new Button(()=>KaiWardrobeWindow.Open(risAvatar)){text="画像の構図を調整…"});
             var initial=Toggle(host,"初期状態",p.IsDefaultEnabled,v=>SetToolkitDefault(p,v));initial.SetEnabled(!KaiDefaultOutfit.Enabled(risAvatar));
@@ -279,16 +240,7 @@ namespace YagihataItems.RadialInventorySystemV4
         void Text(VisualElement parent,string label,string value,Action<string> changed)
         {var field=new TextField(label){value=value??"",isDelayed=true};field.RegisterValueChangedCallback(e=>RunToolkit(()=>changed(e.newValue)));parent.Add(field);}
         Toggle Toggle(VisualElement parent,string label,bool value,Action<bool> changed)
-        {var field=new Toggle(label){value=value};field.RegisterValueChangedCallback(e=>RunToolkit(()=>changed(e.newValue)));parent.Add(field);StyleSwitch(field);return field;}
-        void StyleSwitch(Toggle field)
-        {
-            field.AddToClassList("one-switch");
-            var track=new VisualElement{pickingMode=PickingMode.Ignore};track.AddToClassList("switch-track");
-            var knob=new VisualElement{pickingMode=PickingMode.Ignore};knob.AddToClassList("switch-knob");track.Add(knob);
-            field.Q(className:"unity-base-field__input").Add(track);
-            field.EnableInClassList("switch-on",field.value);
-            field.RegisterValueChangedCallback(e=>field.EnableInClassList("switch-on",e.newValue));
-        }
+        {var field=new Toggle(label){value=value};field.RegisterValueChangedCallback(e=>RunToolkit(()=>changed(e.newValue)));parent.Add(field);return field;}
         ObjectField Object<T>(VisualElement parent,string label,T value,bool scene,Action<T> changed) where T:UnityEngine.Object
         {
             var field=new ObjectField(label){objectType=typeof(T),allowSceneObjects=scene,value=value};
@@ -341,7 +293,7 @@ namespace YagihataItems.RadialInventorySystemV4
             if(!EditorSettings.OptimizeParameters)messages.Add(RISStrings.GetString("warn_paramspace"));
             string joined=string.Join("\n",messages);if(joined!=diagnosticText){diagnosticText=joined;var host=UI<ScrollView>("diagnostics");host.Clear();foreach(var message in messages)host.Add(new HelpBox(message,HelpBoxMessageType.Warning));}
             UI<Button>("apply").SetEnabled(ready&&errors.Length==0&&cost<=256);UI<Button>("detach").SetEnabled(ready);
-            foreach(var name in new[]{"export","import","helpers","chest","heels"})UI<Button>(name).SetEnabled(ready);
+            foreach(var name in new[]{"export","import","helpers","chest"})UI<Button>(name).SetEnabled(ready);
         }
         void ApplyToolkit()
         {

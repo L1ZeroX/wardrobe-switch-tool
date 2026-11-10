@@ -1,7 +1,7 @@
 {
   "name": "net.l1zerox.radialinventory",
   "displayName": "衣装簡単切替ツール",
-  "version": "1.15.0-beta.2",
+  "version": "1.15.0-beta.3",
   "description": "UI Toolkit beta wardrobe editor for VRChat avatars. Includes legacy editing compatibility, paged menus and thumbnails.",
   "gitDependencies": {},
   "vpmDependencies": {

@@ -14,7 +14,7 @@ namespace YagihataItems.RadialInventorySystemV4
         {
             var root = window.rootVisualElement;
             root.Clear();
-            var sheet = KaiPackageResources.Load<StyleSheet>("Editor/UI/WardrobeWindow.uss");
+            var sheet = KaiPackageResources.Load<StyleSheet>("Editor/UI/ToolWindow.uss");
             if (!root.styleSheets.Contains(sheet)) root.styleSheets.Add(sheet);
             KaiPackageResources.Load<VisualTreeAsset>("Editor/UI/ToolWindow.uxml").CloneTree(root);
             var shell = root.Q<VisualElement>("tool-shell");
