@@ -95,8 +95,10 @@ namespace YagihataItems.RadialInventorySystemV4
                         var normal=side==0?normals[outer][v]:hit.Normal;
                         var diff=outside.Point(reference[outer])-inside.Point(reference[inner]);
                         float separation=Vector3.Dot(diff,normal);
-                        // Do not couple distant tangential decorations or opposing faces.
-                        if((diff-normal*separation).sqrMagnitude>.0001f||separation<-.02f)continue;
+                        // Mesh-wide ordering can be reversed locally at seams or belts.
+                        // Allow only a shallow (1 mm) starting overlap; do not pull a
+                        // deliberately tucked-in accessory through the covering fabric.
+                        if((diff-normal*separation).sqrMagnitude>.0001f||separation<-.001f)continue;
                         links.Add(new Link {Inner=inner,Outer=outer,Inside=inside,Outside=outside,Normal=normal,Separation=Mathf.Max(0,separation)});
                     }
                 }
