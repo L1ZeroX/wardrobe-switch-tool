@@ -52,7 +52,8 @@ namespace YagihataItems.RadialInventorySystemV4
             Process.Start(new ProcessStartInfo("powershell.exe", args) { UseShellExecute = true, WindowStyle = ProcessWindowStyle.Hidden });
             status = action == "Restore" ? "Unityを閉じると復元します。結果はプロジェクト外の移行ログで確認できます。" : "バックアップを開始しました。完了結果は移行ログで確認できます。";
         }
-        void OnGUI()
+        public void CreateGUI() => KaiOneUIWindow.Build(this, "衣装の管理", "画像・一括登録・移行をまとめて管理", DrawContent);
+        void DrawContent()
         {
             EditorGUILayout.LabelField("衣装画像・一括登録・移行", EditorStyles.boldLabel);
             if (GUILayout.Button("既存V4設定を再検索")) ReloadFiles();

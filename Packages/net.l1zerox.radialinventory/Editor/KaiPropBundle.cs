@@ -203,7 +203,8 @@ namespace YagihataItems.RadialInventorySystemV4
             if (!string.IsNullOrEmpty(previewError)) EditorGUILayout.HelpBox(previewError, MessageType.Warning);
             EditorGUILayout.LabelField("元のアバターやサムネイルは変更しません。", EditorStyles.wordWrappedMiniLabel);
         }
-        void OnGUI()
+        public void CreateGUI() => KaiOneUIWindow.Build(this, "プロップを合体", "プレビューで確認して、複数の衣装をひとつに", DrawContent);
+        void DrawContent()
         {
             if (data == null || group == null || !data.Groups.Contains(group)) { EditorGUILayout.HelpBox("対象グループを選び直してください。", MessageType.Info); return; }
             EditorGUILayout.HelpBox("選んだパーツをひとつのスイッチにまとめます。あとから「分離する」で元に戻せます。", MessageType.Info);

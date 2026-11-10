@@ -163,10 +163,9 @@ namespace YagihataItems.RadialInventorySystemV4
             int selected=EditorGUILayout.Popup(label,Array.IndexOf(all,current)+1,names);
             return selected<=0?null:all[selected-1];
         }
-        void OnGUI()
+        public void CreateGUI() => KaiOneUIWindow.Build(this, "胸・衣装のフィット", "対象を選ぶ → プレビューで調整 → アバターへ適用", DrawContent);
+        void DrawContent()
         {
-            EditorGUILayout.Space(6);EditorGUILayout.LabelField("胸・衣装補正（実験）",EditorStyles.boldLabel);
-            EditorGUILayout.LabelField("① 素体と衣装を選ぶ → ② 胸サイズを調整してブラシで直す → ③ 適用してシーンを保存",EditorStyles.wordWrappedLabel);
             EditorGUIUtility.labelWidth=110;
             var nextRoot=(GameObject)EditorGUILayout.ObjectField("対象アバター",root,typeof(GameObject),true);
             if(nextRoot!=root){Clear();root=nextRoot;SelectBody();LoadRegistered();}
@@ -251,7 +250,7 @@ namespace YagihataItems.RadialInventorySystemV4
                 {
                     before=GUILayout.Toolbar(before?0:1,new[]{"補正前の衣装","補正後の衣装"},GUILayout.Height(28))==0;
                     closeup=GUILayout.Toolbar(closeup?0:1,new[]{"胸まわり","全身"},GUILayout.Height(28))==0;
-                    var rect=GUILayoutUtility.GetRect(100,Mathf.Max(150,position.height-380),GUILayout.ExpandWidth(true));
+                    var rect=GUILayoutUtility.GetRect(100,Mathf.Max(150,position.height-480),GUILayout.ExpandWidth(true));
                     EditorGUI.DrawRect(rect,new Color(.14f,.15f,.17f));
                     if(session!=null)
                     {

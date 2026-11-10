@@ -180,7 +180,8 @@ namespace YagihataItems.RadialInventorySystemV4
             window.minSize = new Vector2(520, 360);
             window.ShowUtility();
         }
-        void OnGUI()
+        public void CreateGUI() => KaiOneUIWindow.Build(this, "衣装を登録", "必要なメッシュを選んで、グループに追加", DrawContent);
+        void DrawContent()
         {
             if (plan == null) { EditorGUILayout.HelpBox("衣装をもう一度指定してください。", MessageType.Info); return; }
             EditorGUILayout.LabelField("登録先: " + plan.Data.GetAvatarRoot()?.name + " / " + plan.Group.Name, EditorStyles.boldLabel);

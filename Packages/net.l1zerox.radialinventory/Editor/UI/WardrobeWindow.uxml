@@ -1,63 +1,63 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
   <ui:VisualElement name="wardrobe-root" class="wardrobe-root">
-    <ui:VisualElement class="toolbar">
-      <ui:Label name="title" class="title" text="衣装簡単切替ツール" />
-      <ui:Label text="UI Toolkit ベータ" class="badge" />
+    <ui:VisualElement class="toolbar app-bar">
+      <ui:Label name="title" class="app-title" />
+      <ui:Label text="BETA" class="badge" />
       <ui:VisualElement class="spacer" />
-      <ui:Button name="settings" text="表示設定" />
-      <ui:Button name="helpers" text="補助ツール" />
-      <ui:Button name="chest" text="胸・衣装補正" />
-      <ui:Button name="legacy" text="互換画面" tooltip="同じ設定のまま従来の編集画面へ切り替えます。" />
+      <ui:Button name="settings" text="表示設定" class="quiet" />
+      <ui:Button name="legacy" text="互換画面" class="quiet" />
     </ui:VisualElement>
     <ui:VisualElement name="native-editor" class="grow">
-      <ui:VisualElement class="toolbar">
-        <uie:ObjectField name="avatar" label="対象アバター" class="grow" />
-        <ui:Button name="use-selection" text="選択中を使う" />
-        <ui:Button name="export" text="設定を保存…" />
-        <ui:Button name="import" text="設定を読込…" />
+      <ui:VisualElement class="hero">
+        <ui:VisualElement class="toolbar"><ui:Button name="back" text="‹ 戻る" class="quiet" /><ui:Label name="breadcrumb" class="eyebrow" /></ui:VisualElement>
+        <ui:Label name="page-title" text="ワードローブ" class="hero-title" />
+        <ui:Label name="page-subtitle" class="subtitle" />
       </ui:VisualElement>
-      <ui:VisualElement name="global-settings" />
-      <ui:VisualElement name="modes" class="toolbar" />
-      <ui:VisualElement name="basic-editor" class="columns grow">
-        <ui:VisualElement class="column groups">
-          <ui:Label text="① グループ" class="section" />
-          <ui:VisualElement class="toolbar">
-            <ui:Button name="add-group" text="＋ 追加" />
-            <ui:Button name="remove-group" text="削除" />
-            <ui:Button name="group-up" text="↑" tooltip="グループを上へ" />
-            <ui:Button name="group-down" text="↓" tooltip="グループを下へ" />
+      <ui:VisualElement name="basic-editor" class="grow">
+        <ui:VisualElement name="page-home" class="page grow">
+          <ui:Button name="avatar-shortcut" text="対象アバターを選択" class="avatar-chip" />
+          <ui:VisualElement class="toolbar section-bar">
+            <ui:Label text="衣装グループ" class="section" /><ui:VisualElement class="spacer" />
+            <ui:Button name="add-group" text="＋ グループ追加" class="accent" />
+            <ui:Button name="group-up" text="↑" tooltip="選択したグループを上へ" /><ui:Button name="group-down" text="↓" tooltip="選択したグループを下へ" />
+            <ui:Button name="remove-group" text="削除" class="quiet" />
           </ui:VisualElement>
-          <ui:ListView name="groups" class="group-list" />
-          <ui:ScrollView name="group-picture" class="grow" />
+          <ui:Label name="empty-groups" text="まだグループがありません。対象アバターを選び、グループを追加してください。" class="empty-state" />
+          <ui:ListView name="groups" class="grow card-list" />
+          <ui:Label text="衣装をグループのカードへドラッグすると登録できます。" class="hint" />
         </ui:VisualElement>
-        <ui:VisualElement class="column props">
-          <ui:Label text="② グループ設定・衣装" class="section" />
-          <ui:ScrollView name="group-settings" class="group-settings" />
+        <ui:VisualElement name="page-group" class="page grow">
+          <ui:VisualElement class="toolbar section-bar"><ui:Label text="このグループの衣装" class="section" /><ui:VisualElement class="spacer" /><ui:Button name="edit-group" text="グループ設定・画像" class="accent" /></ui:VisualElement>
+          <ui:Foldout text="衣装を登録・合体する" value="false" class="card compact"><ui:VisualElement name="registration-tools" /></ui:Foldout>
           <uie:ToolbarSearchField name="prop-search" />
-          <ui:VisualElement class="toolbar">
-            <ui:Button name="add-prop" text="＋ 追加" />
-            <ui:Button name="remove-prop" text="削除" />
-            <ui:Button name="prop-up" text="↑" tooltip="プロップを上へ" />
-            <ui:Button name="prop-down" text="↓" tooltip="プロップを下へ" />
-          </ui:VisualElement>
-          <ui:ListView name="props" class="grow prop-list" />
-          <ui:Label text="衣装をグループ行へドラッグして登録" class="hint" />
+          <ui:VisualElement class="toolbar"><ui:Button name="add-prop" text="＋ プロップ追加" /><ui:Button name="prop-up" text="↑" tooltip="選択した衣装を上へ" /><ui:Button name="prop-down" text="↓" tooltip="選択した衣装を下へ" /><ui:VisualElement class="spacer" /><ui:Button name="remove-prop" text="削除" class="quiet" /></ui:VisualElement>
+          <ui:Label name="empty-props" text="衣装を登録すると、ここに表示されます。" class="empty-state" />
+          <ui:ListView name="props" class="grow card-list" />
         </ui:VisualElement>
-        <ui:VisualElement class="column details">
-          <ui:Label text="③ 衣装の詳細" class="section" />
-          <ui:ScrollView name="prop-details" class="grow" />
-        </ui:VisualElement>
+        <ui:VisualElement name="page-prop" class="page grow"><ui:ScrollView name="prop-details" class="grow card details-card" /></ui:VisualElement>
+        <ui:ScrollView name="page-group-settings" class="page grow">
+          <ui:VisualElement name="group-picture" class="card" /><ui:VisualElement name="group-settings" class="card" />
+        </ui:ScrollView>
       </ui:VisualElement>
-      <ui:ScrollView name="compatible-tab" class="grow" />
-      <ui:ProgressBar name="capacity" title="パラメーター容量" low-value="0" high-value="256" />
-      <ui:ScrollView name="diagnostics" class="diagnostics" />
-      <ui:VisualElement class="toolbar actions">
-        <ui:Label name="status" class="grow hint" />
-        <ui:Button name="detach" text="適用を解除" />
-        <ui:Button name="apply" text="アバターへ適用する" class="primary" />
+      <ui:ScrollView name="page-setup" class="page grow">
+        <ui:VisualElement class="card"><ui:Label text="対象アバター" class="section" /><uie:ObjectField name="avatar" label="アバター" /><ui:Button name="use-selection" text="Hierarchyの選択中アバターを使う" /><ui:VisualElement class="toolbar"><ui:Button name="export" text="設定を書き出す…" /><ui:Button name="import" text="設定を読み込む…" /></ui:VisualElement></ui:VisualElement>
+        <ui:VisualElement class="card"><ui:Label text="着替えの設定" class="section" /><ui:VisualElement name="global-settings" /></ui:VisualElement>
+        <ui:VisualElement class="card"><ui:Label text="編集モード" class="section" /><ui:VisualElement name="modes" class="toolbar" /></ui:VisualElement>
+      </ui:ScrollView>
+      <ui:ScrollView name="page-tools" class="page grow">
+        <ui:VisualElement class="card"><ui:Label text="靴とヒール" class="section" /><ui:Label text="足元のプレビューを見ながら、靴に合わせて補正値を調整します。" class="hint" /><ui:Button name="heels" text="ヒール調整を開く" class="tool-button" /></ui:VisualElement>
+        <ui:VisualElement class="card"><ui:Label text="胸・衣装のフィット" class="section" /><ui:Label text="胸のサイズと衣装の貫通を、プレビューとブラシで調整します。" class="hint" /><ui:Button name="chest" text="胸・衣装補正を開く" class="tool-button" /></ui:VisualElement>
+        <ui:VisualElement class="card"><ui:Label text="画像・一括登録・移行" class="section" /><ui:Button name="helpers" text="補助ツールを開く" class="tool-button" /></ui:VisualElement>
+        <ui:VisualElement name="credit" class="credit" />
+      </ui:ScrollView>
+      <ui:ScrollView name="compatible-tab" class="grow card" />
+      <ui:VisualElement class="bottom-dock">
+        <ui:ProgressBar name="capacity" title="パラメーター容量" low-value="0" high-value="256" />
+        <ui:ScrollView name="diagnostics" class="diagnostics" />
+        <ui:VisualElement class="toolbar actions"><ui:Label name="status" class="grow hint" /><ui:Button name="detach" text="適用を解除" class="quiet" /><ui:Button name="apply" text="アバターへ適用する" class="primary" /></ui:VisualElement>
+        <ui:VisualElement class="toolbar bottom-nav"><ui:Button name="nav-wardrobe" text="衣装" /><ui:Button name="nav-setup" text="アバター設定" /><ui:Button name="nav-tools" text="補正・ツール" /></ui:VisualElement>
       </ui:VisualElement>
     </ui:VisualElement>
     <ui:VisualElement name="legacy-host" class="grow" />
-    <ui:VisualElement name="credit" class="credit" />
   </ui:VisualElement>
 </ui:UXML>

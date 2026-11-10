@@ -92,7 +92,8 @@ namespace YagihataItems.RadialInventorySystemV4
             catch (Exception ex) { ClearPreview(); error = ex.Message; }
             Repaint();
         }
-        void OnGUI()
+        public void CreateGUI() => KaiOneUIWindow.Build(this, "ヒール調整", "足元を見ながら、靴に合う補正値を調整", DrawContent);
+        void DrawContent()
         {
             if (session == null || session.Data.GetAvatarRoot() == null)
             {
@@ -100,8 +101,6 @@ namespace YagihataItems.RadialInventorySystemV4
             }
             var data = session.Data;
             EditorGUILayout.Space(8);
-            EditorGUILayout.LabelField("ヒール補正の調整（実験）", EditorStyles.boldLabel);
-            EditorGUILayout.LabelField("足元を見ながら、靴に合う角度を調整します。", EditorStyles.wordWrappedLabel);
             using (new EditorGUILayout.HorizontalScope())
             {
                 using (new EditorGUILayout.VerticalScope(GUILayout.Width(340)))
@@ -142,7 +141,7 @@ namespace YagihataItems.RadialInventorySystemV4
                     feet = GUILayout.Toolbar(feet ? 0 : 1, new[] { "足元を拡大", "アバター全体" }, GUILayout.Height(28)) == 0;
                     worn = GUILayout.Toolbar(worn ? 0 : 1, new[] { "履いた状態（設定値）", "脱いだ状態（0）" }, GUILayout.Height(28)) == 0;
                     float messages = (string.IsNullOrEmpty(error) ? 0 : 60) + (string.IsNullOrEmpty(notice) ? 0 : 40);
-                    var side = Mathf.Max(120, Mathf.Min(position.width - 386, position.height - 310 - messages));
+                    var side = Mathf.Max(120, Mathf.Min(position.width - 386, position.height - 410 - messages));
                     var rect = GUILayoutUtility.GetRect(side, side, GUILayout.ExpandWidth(true));
                     EditorGUI.DrawRect(rect, new Color(.15f, .15f, .15f));
                     if (preview != null) GUI.DrawTexture(rect, preview, ScaleMode.ScaleToFit, true);

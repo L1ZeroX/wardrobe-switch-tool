@@ -1,0 +1,10 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+  <ui:VisualElement name="tool-shell" class="wardrobe-root">
+    <ui:VisualElement class="hero">
+      <ui:Label text="衣装簡単切替ツール · BETA" class="eyebrow" />
+      <ui:Label name="tool-title" class="hero-title" />
+      <ui:Label name="tool-subtitle" class="subtitle" />
+    </ui:VisualElement>
+    <ui:ScrollView name="tool-content" class="grow card details-card" />
+  </ui:VisualElement>
+</ui:UXML>

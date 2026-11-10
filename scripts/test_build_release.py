@@ -36,7 +36,7 @@ class DistributionTests(unittest.TestCase):
     def test_ui_toolkit_assets_and_editor_isolation(self):
         report = self.build("ui")
         with zipfile.ZipFile(self.output / "ui" / report["archive"]) as archive:
-            for rel in ["Editor/UI/WardrobeWindow.uxml", "Editor/UI/WardrobeWindow.uss", "Editor/UI/KaiPackageResources.cs"]:
+            for rel in ["Editor/UI/WardrobeWindow.uxml", "Editor/UI/WardrobeWindow.uss", "Editor/UI/KaiPackageResources.cs", "Editor/UI/ToolWindow.uxml", "Editor/UI/KaiOneUIWindow.cs"]:
                 self.assertIn(rel, archive.namelist())
                 self.assertIn(rel + ".meta", archive.namelist())
             definition = json.loads(archive.read("Editor/yagihata.radialinventorysystem.v4.Editor.asmdef"))
