@@ -38,6 +38,15 @@ namespace YagihataItems.RadialInventorySystemV4
         GameObject clone;
         SkinnedMeshRenderer bodyCopy;
         KaiFitSurface bodySurface;
+        KaiFitLayers layers;
+        bool[][] layerAllowed;
+        Vector3 layerCamera;
+        public bool PreserveLayers=true;
+        public float LayerGap=.002f;
+        public SkinnedMeshRenderer[] LayerOrder=>layers.Order.Select(i=>parts[i].Source).ToArray();
+        public int LayerConstraintCount=>layers.ConstraintCount;
+        public void AutoLayerOrder()=>layers.SetOrder(layers.DetectOrder());
+        public void SetLayerOrder(SkinnedMeshRenderer[] order)=>layers.SetOrder(order.Select(r=>parts.FindIndex(p=>p.Source==r)).ToArray());
         bool disposed;
 
         public KaiChestFitSession(GameObject root,SkinnedMeshRenderer body,SkinnedMeshRenderer clothing,string shape)
@@ -84,6 +93,7 @@ namespace YagihataItems.RadialInventorySystemV4
                     p.ReferencePoints=(Vector3[])p.Points.Clone();p.ReferenceSurface=new KaiFitSurface(p.ReferencePoints,p.BrushNormals,p.Working.triangles);
                 }
                 RefreshBody();
+                layers=new KaiFitLayers(parts.Select(p=>p.ReferencePoints).ToArray(),parts.Select(p=>p.BrushNormals).ToArray(),parts.Select(p=>p.Working.triangles).ToArray());
             }
             catch {Dispose();throw;}
         }
@@ -194,6 +204,7 @@ namespace YagihataItems.RadialInventorySystemV4
             if(radius<=0||radius>.5f||strength<=0||strength>1||gap<0||gap>.02f || new[]{radius,strength,gap}.Any(v=>float.IsNaN(v)||float.IsInfinity(v)))
                 throw new InvalidOperationException("ブラシの大きさ・強さ・隙間を確認してください。");
             int count=0;
+            var affected=parts.Select(p=>new bool[p.Points.Length]).ToArray();
             foreach(var p in parts)
             {
                 int changed=0;
@@ -210,6 +221,7 @@ namespace YagihataItems.RadialInventorySystemV4
                     var toReference=p.ReferencePoints[i]-cameraPosition;float referenceDistance=toReference.magnitude;
                     if(referenceDistance<.0001f)continue;
                     if(p.ReferenceSurface.Raycast(new Ray(cameraPosition,toReference/referenceDistance),out occluder) && occluder.Distance<referenceDistance-.001f)continue;
+                    affected[parts.IndexOf(p)][i]=true;
                     float amount=strength*(1-Mathf.SmoothStep(0,1,d/radius));Vector3 delta;
                     if(mode==KaiFitBrush.Restore)delta=-p.Offsets[i]*amount;
                     else
@@ -228,6 +240,39 @@ namespace YagihataItems.RadialInventorySystemV4
                 }
                 if(changed>0)RefreshWorking(p);count+=changed;
             }
+            if(PreserveLayers&&parts.Count>1&&mode!=KaiFitBrush.Restore)count+=ResolveLayers(affected,cameraPosition);
+            return count;
+        }
+        public int RepairLayers(Vector3 cameraPosition)
+        {
+            BeginStroke();
+            return ResolveLayers(parts.Select(p=>p.Offsets.Select(v=>v.sqrMagnitude>1e-14f).ToArray()).ToArray(),cameraPosition);
+        }
+        int ResolveLayers(bool[][] affected,Vector3 cameraPosition)
+        {
+            int count=0;
+                var points=parts.Select(p=>(Vector3[])p.Points.Clone()).ToArray();
+                if(layerAllowed==null||(layerCamera-cameraPosition).sqrMagnitude>1e-10f)
+                {
+                    layerCamera=cameraPosition;
+                    layerAllowed=parts.Select(p=>p.ReferencePoints.Select((v,i)=>
+                    {
+                        var ray=v-cameraPosition;float distance=ray.magnitude;
+                        if(distance<.0001f||Vector3.Dot(p.BrushNormals[i],-ray)<=0)return false;
+                        return !p.ReferenceSurface.Raycast(new Ray(cameraPosition,ray/distance),out var hit)||hit.Distance>=distance-.001f;
+                    }).ToArray()).ToArray();
+                }
+                layers.Resolve(points,affected,LayerGap,layerAllowed);
+                for(int k=0;k<parts.Count;k++)
+                {
+                    var p=parts[k];bool changed=false;
+                    for(int i=0;i<p.Points.Length;i++)
+                    {
+                        var movement=points[k][i]-p.Points[i];if(movement.sqrMagnitude<1e-14f)continue;
+                        p.Offsets[i]+=p.InverseSkin[i].MultiplyVector(movement);changed=true;count++;
+                    }
+                    if(changed)RefreshWorking(p);
+                }
             return count;
         }
         public bool Pick(Vector2 position,Rect rect,out KaiFitSurface.Hit hit)

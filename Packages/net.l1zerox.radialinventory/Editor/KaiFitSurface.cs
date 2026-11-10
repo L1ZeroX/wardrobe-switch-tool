@@ -7,7 +7,7 @@ namespace YagihataItems.RadialInventorySystemV4
     // A small triangle BVH shared by brush picking and closest-surface queries.
     public sealed class KaiFitSurface
     {
-        public struct Hit { public Vector3 Point, Normal; public float Distance; }
+        public struct Hit { public Vector3 Point, Normal, Barycentric; public float Distance; public int Triangle; }
         sealed class Node { public Bounds Box; public Node Left, Right; public int Start, Count; }
         Vector3[] vertices, normals;
         readonly int[] triangles, order;
@@ -75,7 +75,7 @@ namespace YagihataItems.RadialInventorySystemV4
                 int t=order[i]; Vector3 bary;
                 var p=Closest(point,vertices[triangles[t*3]],vertices[triangles[t*3+1]],vertices[triangles[t*3+2]],out bary);
                 float d=Vector3.Distance(p,point);
-                if(d<=hit.Distance) {found=true; hit=new Hit {Point=p,Normal=Normal(t,bary),Distance=d};}
+                if(d<=hit.Distance) {found=true; hit=new Hit {Point=p,Normal=Normal(t,bary),Distance=d,Triangle=t,Barycentric=bary};}
             }
         }
         public bool Raycast(Ray ray,out Hit hit)
@@ -93,7 +93,8 @@ namespace YagihataItems.RadialInventorySystemV4
                 var q=ray.origin-a; float u=Vector3.Dot(q,p)/det; if(u<0||u>1)continue;
                 var cross=Vector3.Cross(q,e1); float v=Vector3.Dot(ray.direction,cross)/det;if(v<0||u+v>1)continue;
                 float d=Vector3.Dot(e2,cross)/det;if(d<0||d>=hit.Distance)continue;
-                found=true;hit=new Hit {Point=ray.GetPoint(d),Normal=Normal(t,new Vector3(1-u-v,u,v)),Distance=d};
+                var bary=new Vector3(1-u-v,u,v);
+                found=true;hit=new Hit {Point=ray.GetPoint(d),Normal=Normal(t,bary),Distance=d,Triangle=t,Barycentric=bary};
             }
         }
         static Vector3 Closest(Vector3 p,Vector3 a,Vector3 b,Vector3 c,out Vector3 w)

@@ -40,7 +40,7 @@ namespace YagihataItems.RadialInventorySystemV4
         Avatar data;
         Avatar[] savedChoices=new Avatar[0];
         int groupIndex;
-        bool individual,showMeshes;
+        bool individual,showMeshes,showLayers;
         readonly HashSet<SkinnedMeshRenderer> excluded=new HashSet<SkinnedMeshRenderer>();
         SkinnedMeshRenderer[] candidates=new SkinnedMeshRenderer[0];
         string[] selectionWarnings=new string[0];
@@ -207,6 +207,31 @@ namespace YagihataItems.RadialInventorySystemV4
                         radius=EditorGUILayout.Slider("大きさ（cm）",radius*100,1,25)/100;
                         strength=EditorGUILayout.Slider("強さ",strength,.05f,1);
                         gap=EditorGUILayout.Slider("肌との隙間（mm）",gap*1000,0,10)/1000;
+                        if(session.Targets.Length>1)
+                        {
+                            session.PreserveLayers=EditorGUILayout.ToggleLeft("重ね着の順序・隙間を保つ",session.PreserveLayers);
+                            if(session.PreserveLayers)
+                            {
+                                session.LayerGap=EditorGUILayout.Slider("服の隙間（mm）",session.LayerGap*1000,0,10)/1000;
+                                if(GUILayout.Button("編集済み範囲の重なりを直す"))Run(()=>session.RepairLayers(session.CameraPosition));
+                                showLayers=EditorGUILayout.Foldout(showLayers,"重ね着の順番（内側 → 外側）",true);
+                                if(showLayers)
+                                {
+                                    EditorGUILayout.HelpBox("形状から推定します。違う場合は矢印で並べ替えてください。上が内側、下が外側です。編集の再開始は不要です。",MessageType.Info);
+                                    if(GUILayout.Button("順番を自動判定し直す"))Run(session.AutoLayerOrder);
+                                    var order=session.LayerOrder;
+                                    for(int k=0;k<order.Length;k++)
+                                        using(new EditorGUILayout.HorizontalScope())
+                                        {
+                                            EditorGUILayout.LabelField((k+1)+". "+order[k].name);
+                                            using(new EditorGUI.DisabledScope(k==0))if(GUILayout.Button("↑",GUILayout.Width(26)))
+                                            {var item=order[k];order[k]=order[k-1];order[k-1]=item;Run(()=>session.SetLayerOrder(order));}
+                                            using(new EditorGUI.DisabledScope(k==order.Length-1))if(GUILayout.Button("↓",GUILayout.Width(26)))
+                                            {var item=order[k];order[k]=order[k+1];order[k+1]=item;Run(()=>session.SetLayerOrder(order));}
+                                        }
+                                }
+                            }
+                        }
                         EditorGUILayout.HelpBox(brush==KaiFitBrush.Correct?"衣装の外向きに補正します。同じメッシュの隠れた裏側は保護します。裏側を直す場合は回転してその面をなぞってください。":brush==KaiFitBrush.Push?"選択した衣装を少しずつ外側へ広げます。貫通補正だけで足りない部分に使います。":"なぞった範囲を、このツールで補正する前の形へ戻します。",MessageType.None);
                         using(new EditorGUILayout.HorizontalScope())
                         {
