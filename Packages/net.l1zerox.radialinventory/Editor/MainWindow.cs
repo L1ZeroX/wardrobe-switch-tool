@@ -41,13 +41,13 @@ namespace YagihataItems.RadialInventorySystemV4
             RISStrings.EditorInitialize();
             var window = GetWindow<MainWindow>("衣装簡単切替ツール");
             window.titleContent = new GUIContent("衣装簡単切替ツール");
-            window.minSize = new Vector2(960, 620);
+            window.minSize = new Vector2(720, 740);
         }
         public static void OpenForAvatar(Avatar data)
         {
             Create();
             var window = GetWindow<MainWindow>();
-            if (!ReferenceEquals(window.risAvatar, data)) { window.toolkitGroup = 0; window.toolkitProp = 0; window.propSearch = ""; }
+            if (!ReferenceEquals(window.risAvatar, data)) { window.toolkitGroup = 0; window.toolkitProp = 0; window.toolkitSettings = false; window.propSearch = ""; }
             window.risAvatar = data;
             window.avatarRoot = data?.GetAvatarRoot();
             window.indexedList.index = Array.IndexOf(FindObjectsOfType<VRCAvatarDescriptor>(), window.avatarRoot);

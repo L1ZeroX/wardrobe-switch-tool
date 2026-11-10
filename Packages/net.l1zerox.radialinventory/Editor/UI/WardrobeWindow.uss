@@ -1,33 +1,68 @@
-.wardrobe-root { flex-grow: 1; padding: 8px; font-size: 13px; }
-.toolbar { flex-direction: row; align-items: center; flex-shrink: 0; margin-bottom: 5px; flex-wrap: wrap; }
-.title { font-size: 18px; -unity-font-style: bold; margin-right: 12px; }
-.badge { border-radius: 4px; padding: 4px 8px; background-color: rgb(52, 81, 107); color: rgb(235, 246, 255); }
-.grow, .spacer { flex-grow: 1; min-height: 0; }
+.wardrobe-root { flex-grow: 1; padding: 18px; background-color: rgb(35,35,35); color: rgb(242,242,242); font-size: 14px; }
+.grow, .spacer { flex-grow: 1; min-height: 0; min-width: 0; }
+.toolbar { flex-direction: row; align-items: center; flex-shrink: 0; flex-wrap: wrap; }
+.header { margin-bottom: 18px; }
+.brand-icon { width: 26px; height: 26px; margin-right: 10px; }
+.title { font-size: 22px; -unity-font-style: bold; }
+.badge { background-color: rgb(52,52,52); border-radius: 14px; color: rgb(220,220,220); padding: 4px 10px; font-size: 12px; }
+.tabs { flex-direction: row; flex-shrink: 0; margin-bottom: 16px; }
+Button { background-color: rgb(39,39,39); color: rgb(240,240,240); border-width: 1px; border-color: rgb(56,56,56); border-radius: 12px; min-height: 34px; padding: 5px 10px; margin: 3px; font-size: 13px; }
+Button:hover { background-color: rgb(55,55,55); }
+Button:focus { border-color: rgb(116,156,224); }
+Button:disabled { opacity: 0.4; }
+.tab { flex-grow: 1; flex-basis: 0; flex-direction: column; justify-content: center; align-items: center; height: 78px; border-width: 0; margin: 0 5px; border-radius: 13px; }
+.tab-icon { width: 27px; height: 27px; margin-bottom: 5px; }
+.tab-active { background-color: rgb(45,45,45); border-bottom-width: 2px; border-bottom-color: rgb(130,170,225); }
 .columns { flex-direction: row; }
-.column { padding: 6px; margin-right: 5px; border-width: 1px; border-color: rgba(128,128,128,0.4); border-radius: 8px; min-width: 0; }
-.groups { width: 24%; }
-.props { width: 38%; }
-.details { flex-grow: 1; width: 38%; margin-right: 0; }
-.section { font-size: 14px; -unity-font-style: bold; margin-bottom: 7px; }
-Button { min-height: 30px; border-radius: 6px; padding-left: 9px; padding-right: 9px; font-size: 13px; }
-Button:focus { border-color: rgb(56, 157, 246); border-width: 2px; }
-#prop-search Button { min-height: 16px; height: 16px; width: 16px; padding: 0; }
-.primary { background-color: rgb(35, 102, 154); color: white; min-width: 170px; min-height: 34px; }
-.selected-mode { border-bottom-width: 3px; border-bottom-color: rgb(44, 161, 255); -unity-font-style: bold; }
-.unity-base-field { margin-bottom: 5px; min-height: 24px; }
-.unity-base-field__label, .unity-base-field__input { font-size: 13px; }
-.unity-base-field__label { min-width: 120px; }
-.group-list { height: 190px; min-height: 100px; flex-shrink: 0; }
-.prop-list { min-height: 120px; }
-.group-settings { max-height: 290px; flex-shrink: 1; }
-.list-row { flex-direction: row; align-items: center; padding: 3px 6px; height: 42px; }
-.list-row Image { width: 34px; height: 34px; margin-right: 8px; }
-.list-row Label { flex-grow: 1; overflow: hidden; -unity-text-overflow-position: end; text-overflow: ellipsis; }
-.unity-collection-view__item--selected { background-color: rgba(29,122,194,0.45); border-bottom-color: rgb(44,161,255); border-bottom-width: 2px; }
-.hint { white-space: normal; font-size: 12px; margin-top: 4px; margin-bottom: 4px; }
-.diagnostics { max-height: 100px; flex-shrink: 1; }
-.actions { margin-top: 6px; }
-.credit { flex-direction: row; align-items: center; flex-shrink: 0; height: 58px; }
-.credit Image { width: 48px; height: 54px; margin-right: 10px; }
-.credit Label { margin-right: 20px; }
-.light .badge { background-color: rgb(215,233,250); color: rgb(30,55,75); }
+.panel { background-color: rgb(2,2,2); border-width: 1px; border-color: rgb(58,58,58); border-radius: 18px; padding: 12px; min-width: 0; }
+.groups { width: 46%; margin-right: 10px; }
+.clothes { width: 54%; }
+.section { font-size: 16px; margin-bottom: 10px; }
+.subsection { font-size: 14px; -unity-font-style: bold; margin-top: 16px; margin-bottom: 8px; }
+.group-list { height: 165px; min-height: 72px; flex-shrink: 1; }
+.prop-list { min-height: 110px; }
+.list-row { flex-direction: row; align-items: center; height: 60px; margin: 4px 2px; padding: 8px 10px; border-radius: 12px; background-color: rgb(39,39,39); border-width: 1px; border-color: rgb(39,39,39); }
+.list-row Image { width: 26px; height: 26px; margin-right: 9px; }
+.row-copy { flex-grow: 1; min-width: 0; }
+.row-name { font-size: 14px; overflow: hidden; text-overflow: ellipsis; }
+.row-count { font-size: 12px; color: rgb(175,181,191); margin-top: 4px; }
+.row-check { width: 18px; color: rgb(135,184,242); font-size: 18px; }
+.unity-collection-view__item--selected { background-color: rgba(0,0,0,0); }
+.unity-collection-view__item--selected .list-row { background-color: rgb(12,20,35); border-color: rgb(109,150,216); }
+.group-preview { margin-top: 10px; }
+#group-image { background-color: rgb(32,32,32); border-radius: 12px; }
+.outline { border-radius: 22px; background-color: rgb(2,2,2); border-color: rgb(83,83,83); min-height: 42px; font-size: 16px; margin-top: 10px; }
+.primary { background-color: rgb(241,242,244); color: rgb(16,16,16); min-height: 50px; border-radius: 26px; border-width: 0; font-size: 18px; margin: 10px 0 2px; flex-shrink: 0; }
+.primary:hover { background-color: white; }
+.small-actions Button { min-height: 26px; padding: 2px 10px; }
+.prop-foldout { margin-top: 6px; flex-shrink: 0; }
+.prop-details { max-height: 270px; }
+.unity-base-field { min-height: 28px; margin: 5px 0; }
+.unity-base-field__label { min-width: 116px; font-size: 13px; color: rgb(223,223,223); }
+.unity-base-field__input { background-color: rgb(38,38,38); color: rgb(240,240,240); border-radius: 5px; font-size: 13px; }
+.unity-foldout__toggle { color: rgb(220,220,220); }
+#prop-search { min-height: 26px; margin-bottom: 6px; }
+#prop-search Button { min-height: 16px; height: 16px; width: 16px; padding: 0; margin: 0; }
+#settings-page .unity-scroll-view__content-container { padding-right: 5px; }
+#global-settings .toolbar { flex-direction: column; align-items: stretch; }
+.selected-mode { border-bottom-color: rgb(116,166,231); border-bottom-width: 2px; }
+.hint { white-space: normal; color: rgb(170,170,170); font-size: 12px; margin: 3px 0; }
+.diagnostics { max-height: 65px; }
+#capacity { height: 16px; margin-top: 9px; flex-shrink: 0; }
+#capacity .unity-progress-bar__background { background-color: rgb(51,51,51); border-radius: 8px; }
+#capacity .unity-progress-bar__progress { background-color: rgb(70,107,157); border-radius: 8px; }
+.footer-actions Button, .footer Button { min-height: 24px; padding: 2px 8px; font-size: 12px; }
+.footer-actions { margin-top: 4px; }
+.footer { margin-top: 3px; }
+.credit { flex-direction: row; align-items: center; height: 36px; }
+.credit Image { width: 27px; height: 32px; margin-right: 6px; }
+.credit Label { margin-right: 7px; font-size: 12px; }
+
+.unity-toggle__input { background-color: rgba(0,0,0,0); }
+.unity-toggle__checkmark { border-color: rgb(150,150,150); background-color: rgb(44,44,44); }
+
+#clothes-page, #basic-editor { flex-basis: 0; flex-shrink: 1; }
+.prop-list { flex-basis: 0; flex-shrink: 1; min-height: 68px; }
+.prop-foldout { flex-shrink: 1; min-height: 24px; }
+.prop-foldout > .unity-foldout__content { flex-shrink: 1; min-height: 0; }
+.prop-details { height: 170px; max-height: 170px; flex-shrink: 1; min-height: 70px; }

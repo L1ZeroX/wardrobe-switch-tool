@@ -112,7 +112,7 @@ def build(output, repository=None, previous=None, fetch_previous=False):
         stable = [v for v in versions if re.fullmatch(r"\d+\.\d+\.\d+", v)]
         stable_version = max(stable, key=lambda v: tuple(map(int, v.split('.')))) if stable else version
         shown = versions[stable_version] if report["prerelease"] and stable else published_manifest
-        notice = (f"3列UIベータ版 v{version} を公開中。VCCの Settings → Packages → Show Pre-Release Packages をONにして選択できます。専用編集の一部は互換UIです。" if report["prerelease"] else "")
+        notice = (f"カードUIベータ版 v{version} を公開中。VCCの Settings → Packages → Show Pre-Release Packages をONにして選択できます。専用編集の一部は互換UIです。" if report["prerelease"] else "")
         for key, value in {"VERSION": shown["version"], "CHANNEL_NOTICE": notice, "LISTING_URL": listing_url, "ADD_URL": add_url,
                            "ASSET_VERSION": asset_version,
                            "REPOSITORY_URL": f"https://github.com/{repository}", "ZIP_URL": shown["url"]}.items():
