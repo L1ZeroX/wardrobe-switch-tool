@@ -207,6 +207,8 @@ namespace YagihataItems.RadialInventorySystemV4
                         radius=EditorGUILayout.Slider("大きさ（cm）",radius*100,1,25)/100;
                         strength=EditorGUILayout.Slider("強さ",strength,.05f,1);
                         gap=EditorGUILayout.Slider("肌との隙間（mm）",gap*1000,0,10)/1000;
+                        if(GUILayout.Button("編集済み範囲の貫通・縫い目を直す"))Run(()=>session.RepairSurfaces(session.CameraPosition,gap));
+                        EditorGUILayout.LabelField("縫い目と浅い食い込み、肌から浮いた補正の段差を整えます。深い部分はブラシで調整してください。",EditorStyles.wordWrappedMiniLabel);
                         if(session.Targets.Length>1)
                         {
                             session.PreserveLayers=EditorGUILayout.ToggleLeft("重ね着の順序・隙間を保つ",session.PreserveLayers);

@@ -17,6 +17,7 @@ namespace YagihataItems.RadialInventorySystemV4
             public Vector3[] Basis, Offsets, Initial, Points, Normals, BrushNormals, ReferencePoints;
             public Matrix4x4[] InverseSkin;
             public KaiFitSurface Surface, ReferenceSurface;
+            public KaiFitSeams Seams;
         }
         public readonly GameObject Root;
         public readonly SkinnedMeshRenderer Body;
@@ -89,7 +90,9 @@ namespace YagihataItems.RadialInventorySystemV4
                     p.Working=UnityEngine.Object.Instantiate(p.Original);p.Working.hideFlags=HideFlags.HideAndDontSave;p.Copy.sharedMesh=p.Working;
                     for(int i=0;i<p.Working.blendShapeCount;i++)p.Copy.SetBlendShapeWeight(i,p.Source.GetBlendShapeWeight(i));
                     p.InverseSkin=InverseSkinMatrices(p.Copy);
-                    RefreshWorking(p);p.BrushNormals=(Vector3[])p.Normals.Clone();
+                    Vector3[] basePoints,baseNormals;Bake(p.Copy,out basePoints,out baseNormals);
+                    p.Seams=new KaiFitSeams(p.Original);
+                    RefreshWorking(p);p.BrushNormals=baseNormals;
                     p.ReferencePoints=(Vector3[])p.Points.Clone();p.ReferenceSurface=new KaiFitSurface(p.ReferencePoints,p.BrushNormals,p.Working.triangles);
                 }
                 RefreshBody();
@@ -238,9 +241,27 @@ namespace YagihataItems.RadialInventorySystemV4
                     if(delta.sqrMagnitude<1e-16f)continue;
                     p.Offsets[i]+=delta;changed++;
                 }
+                changed+=p.Seams.Synchronize(p.Offsets,affected[parts.IndexOf(p)],mode==KaiFitBrush.Restore);
                 if(changed>0)RefreshWorking(p);count+=changed;
             }
+            if(mode==KaiFitBrush.Correct)count+=RepairBodyFaces(affected,cameraPosition,gap,strength);
             if(PreserveLayers&&parts.Count>1&&mode!=KaiFitBrush.Restore)count+=ResolveLayers(affected,cameraPosition);
+            return count;
+        }
+        public int RepairSurfaces(Vector3 cameraPosition,float gap)
+        {
+            if(gap<0||gap>.01f||float.IsNaN(gap)||float.IsInfinity(gap))throw new InvalidOperationException("肌との隙間は0〜10mmで指定してください。");
+            BeginStroke();var affected=parts.Select(p=>p.Offsets.Select(v=>v.sqrMagnitude>1e-14f).ToArray()).ToArray();int count=0;
+            PrepareAllowed(cameraPosition);
+            foreach(var p in parts){int n=p.Seams.Synchronize(p.Offsets,affected[parts.IndexOf(p)]);if(n>0)RefreshWorking(p);count+=n;}
+            foreach(var p in parts)for(int pass=0;pass<4;pass++)
+            {
+                int k=parts.IndexOf(p);var visible=affected[k].Select((v,i)=>v&&layerAllowed[k][i]).ToArray();
+                int n=p.Seams.SmoothOutside(p.Offsets,p.Points,p.InverseSkin,visible,bodySurface,gap);
+                n+=p.Seams.Synchronize(p.Offsets,affected[k]);if(n==0)break;RefreshWorking(p);count+=n;
+            }
+            count+=RepairBodyFaces(affected,cameraPosition,gap,1,3);
+            if(PreserveLayers&&parts.Count>1)count+=ResolveLayers(affected,cameraPosition);
             return count;
         }
         public int RepairLayers(Vector3 cameraPosition)
@@ -251,17 +272,11 @@ namespace YagihataItems.RadialInventorySystemV4
         int ResolveLayers(bool[][] affected,Vector3 cameraPosition)
         {
             int count=0;
+            PrepareAllowed(cameraPosition);
+            // A seam copy moved by one constraint may touch the next garment.
+            for(int pass=0;pass<2;pass++)
+            {
                 var points=parts.Select(p=>(Vector3[])p.Points.Clone()).ToArray();
-                if(layerAllowed==null||(layerCamera-cameraPosition).sqrMagnitude>1e-10f)
-                {
-                    layerCamera=cameraPosition;
-                    layerAllowed=parts.Select(p=>p.ReferencePoints.Select((v,i)=>
-                    {
-                        var ray=v-cameraPosition;float distance=ray.magnitude;
-                        if(distance<.0001f||Vector3.Dot(p.BrushNormals[i],-ray)<=0)return false;
-                        return !p.ReferenceSurface.Raycast(new Ray(cameraPosition,ray/distance),out var hit)||hit.Distance>=distance-.001f;
-                    }).ToArray()).ToArray();
-                }
                 layers.Resolve(points,affected,LayerGap,layerAllowed);
                 for(int k=0;k<parts.Count;k++)
                 {
@@ -271,8 +286,45 @@ namespace YagihataItems.RadialInventorySystemV4
                         var movement=points[k][i]-p.Points[i];if(movement.sqrMagnitude<1e-14f)continue;
                         p.Offsets[i]+=p.InverseSkin[i].MultiplyVector(movement);changed=true;count++;
                     }
-                    if(changed)RefreshWorking(p);
+                    int seams=p.Seams.Synchronize(p.Offsets,affected[k]);count+=seams;
+                    if(changed||seams>0)RefreshWorking(p);
                 }
+            }
+            return count;
+        }
+        void PrepareAllowed(Vector3 cameraPosition)
+        {
+            if(layerAllowed!=null&&(layerCamera-cameraPosition).sqrMagnitude<=1e-10f)return;
+            layerCamera=cameraPosition;
+            layerAllowed=parts.Select(p=>p.ReferencePoints.Select((v,i)=>
+            {
+                var ray=v-cameraPosition;float distance=ray.magnitude;
+                if(distance<.0001f||Vector3.Dot(p.BrushNormals[i],-ray)<=0)return false;
+                return !p.ReferenceSurface.Raycast(new Ray(cameraPosition,ray/distance),out var hit)||hit.Distance>=distance-.001f;
+            }).ToArray()).ToArray();
+        }
+        int RepairBodyFaces(bool[][] affected,Vector3 cameraPosition,float gap,float strength,int rounds=1)
+        {
+            PrepareAllowed(cameraPosition);int count=0;
+            for(int k=0;k<parts.Count;k++)
+            {
+                var p=parts[k];var region=(bool[])affected[k].Clone();
+                for(int round=0;round<rounds;round++)
+                {
+                var points=(Vector3[])p.Points.Clone();var mask=(bool[])region.Clone();
+                KaiFitCloth.RepairBody(points,p.BrushNormals,p.Working.triangles,mask,layerAllowed[k],bodySurface,gap,strength);
+                bool changed=false;
+                for(int i=0;i<points.Length;i++)
+                {
+                    var delta=points[i]-p.Points[i];if(delta.sqrMagnitude<1e-14f)continue;
+                    p.Offsets[i]+=p.InverseSkin[i].MultiplyVector(delta);changed=true;count++;
+                }
+                int seams=p.Seams.Synchronize(p.Offsets,mask);count+=seams;
+                for(int i=0;i<mask.Length;i++)affected[k][i]|=mask[i];
+                if(changed||seams>0)RefreshWorking(p);
+                else break;
+                }
+            }
             return count;
         }
         public bool Pick(Vector2 position,Rect rect,out KaiFitSurface.Hit hit)

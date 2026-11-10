@@ -36,6 +36,15 @@ namespace YagihataItems.RadialInventorySystemV4
             distance=0;
             if(outward.sqrMagnitude<.5f)return false;
             outward.Normalize();
+            // An exit ray can hit a different lobe across an exterior valley.
+            // Do not mistake that later crossing for containment in the body.
+            // Inside a scaled breast the nearest face may be its rear, but its
+            // signed distance is still negative: keep the outward exit search.
+            if(Nearest(point,range,out var closest))
+            {
+                float signed=Vector3.Dot(point-closest.Point,closest.Normal);
+                if(signed>=gap || (signed>0&&Vector3.Dot(closest.Normal,outward)<.2f))return false;
+            }
             // Search only along the garment's outward direction. Nearest-surface
             // normals can point inward when a scaled breast encloses a garment vertex.
             if(!Raycast(new Ray(point+outward*range,-outward),out var hit))return false;
