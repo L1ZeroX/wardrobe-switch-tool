@@ -40,7 +40,7 @@ namespace YagihataItems.RadialInventorySystemV4
                 if (!string.IsNullOrEmpty(state.Error)) EditorGUILayout.HelpBox(state.Error, MessageType.Warning);
             }
         }
-        static void Observe(Avatar data, Group group)
+        internal static void Observe(Avatar data, Group group)
         {
             if (!data.KaiAutoThumbnail || data.GetAvatarRoot() == null) return;
             var state = states.GetValue(group, _ => new State());
@@ -52,7 +52,7 @@ namespace YagihataItems.RadialInventorySystemV4
             if ((icon == null || (owned && (group.KaiThumbnailSignature != signature || duplicate))) && state.AttemptedSignature != signature)
                 Request(data, group, false);
         }
-        static void Request(Avatar data, Group group, bool manual)
+        internal static void Request(Avatar data, Group group, bool manual)
         {
             var state = states.GetValue(group, _ => new State());
             if (state.Pending) return;

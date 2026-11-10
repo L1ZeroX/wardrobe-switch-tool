@@ -33,6 +33,32 @@ class DistributionTests(unittest.TestCase):
     def test_reproducible_zip(self):
         self.assertEqual(self.build("first")["sha256"], self.build("second")["sha256"])
 
+    def test_ui_toolkit_assets_and_editor_isolation(self):
+        report = self.build("ui")
+        with zipfile.ZipFile(self.output / "ui" / report["archive"]) as archive:
+            for rel in ["Editor/UI/WardrobeWindow.uxml", "Editor/UI/WardrobeWindow.uss", "Editor/UI/KaiPackageResources.cs"]:
+                self.assertIn(rel, archive.namelist())
+                self.assertIn(rel + ".meta", archive.namelist())
+            definition = json.loads(archive.read("Editor/yagihata.radialinventorysystem.v4.Editor.asmdef"))
+            self.assertEqual(definition["includePlatforms"], ["Editor"])
+        self.assertEqual(read_json(PACKAGE / "package.json")["unityRelease"], "22f1")
+
+    def test_beta_retains_stable_download(self):
+        report = self.build("beta-first", repository="example-tests/wardrobe-switch-tool")
+        if not report["prerelease"]:
+            self.skipTest("Only applies to a beta release")
+        old_path = self.output / "beta-first/site/index.json"
+        old = read_json(old_path)
+        stable = {"name": "net.l1zerox.radialinventory", "version": "1.14.3", "url": "https://example.invalid/stable.zip"}
+        old["packages"][stable["name"]]["versions"]["1.14.3"] = stable
+        old_path.write_text(json.dumps(old), encoding="utf-8")
+        self.build("beta-final", repository="example-tests/wardrobe-switch-tool", previous=old_path)
+        page = (self.output / "beta-final/site/index.html").read_text(encoding="utf-8")
+        self.assertIn("https://example.invalid/stable.zip", page)
+        self.assertIn("Show Pre-Release Packages", page)
+        listing = read_json(self.output / "beta-final/site/index.json")
+        self.assertEqual(listing["packages"][stable["name"]]["versions"]["1.14.3"], stable)
+
     def test_standalone_dependency_activation(self):
         manifest = read_json(PACKAGE / "package.json")
         self.assertNotIn("yagihata.radialinventorysystem.v4", manifest.get("vpmDependencies", {}))

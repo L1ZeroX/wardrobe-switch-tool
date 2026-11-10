@@ -23,5 +23,6 @@
             "define": "RISV4_JSON"
         }
     ],
-    "noEngineReferences": false
+    "noEngineReferences": false,
+    "rootNamespace": "YagihataItems.RadialInventorySystemV4"
 }

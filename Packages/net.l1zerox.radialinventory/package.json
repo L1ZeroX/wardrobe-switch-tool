@@ -1,8 +1,8 @@
 {
   "name": "net.l1zerox.radialinventory",
   "displayName": "衣装簡単切替ツール",
-  "version": "1.14.3",
-  "description": "Radial Inventory System V4 based wardrobe editor with stable paged menus and thumbnails.",
+  "version": "1.15.0-beta.1",
+  "description": "UI Toolkit beta wardrobe editor for VRChat avatars. Includes legacy editing compatibility, paged menus and thumbnails.",
   "gitDependencies": {},
   "vpmDependencies": {
     "com.vrchat.avatars": ">=3.10.3 <3.11.0"
@@ -20,5 +20,8 @@
     "yagihata.radialinventorysystem.v4"
   ],
   "license": "MIT",
-  "unity": "2022.3"
+  "unity": "2022.3",
+  "unityRelease": "22f1",
+  "documentationUrl": "https://github.com/L1ZeroX/wardrobe-switch-tool#readme",
+  "changelogUrl": "https://github.com/L1ZeroX/wardrobe-switch-tool/releases"
 }

@@ -34,7 +34,9 @@ jobs:
             gh release download "v$VERSION" --pattern "$ZIP" --dir existing
             cmp "dist/$ZIP" "existing/$ZIP"
           else
-            gh release create "v$VERSION" "dist/$ZIP" "dist/net.l1zerox.radialinventory-$VERSION.json" dist/SHA256SUMS.txt --target "$GITHUB_SHA" --title "衣装簡単切替ツール $VERSION" --notes-file RELEASE-NOTES.md
+            FLAGS=()
+            if [[ "$VERSION" == *-* ]]; then FLAGS+=(--prerelease --latest=false); fi
+            gh release create "v$VERSION" "dist/$ZIP" "dist/net.l1zerox.radialinventory-$VERSION.json" dist/SHA256SUMS.txt --target "$GITHUB_SHA" --title "衣装簡単切替ツール $VERSION" --notes-file RELEASE-NOTES.md "${FLAGS[@]}"
           fi
       - uses: actions/upload-pages-artifact@v3
         with:

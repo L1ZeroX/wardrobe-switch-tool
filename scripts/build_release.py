@@ -24,7 +24,7 @@ def write_json(path, value):
 
 
 def collect_files():
-    allowed = {".cs", ".meta", ".asmdef", ".json", ".png", ".ps1", ".md", ".bat"}
+    allowed = {".cs", ".meta", ".asmdef", ".json", ".png", ".ps1", ".md", ".bat", ".uxml", ".uss"}
     files = sorted(p for p in PACKAGE.rglob("*") if p.is_file())
     for p in files:
         rel = p.relative_to(PACKAGE).as_posix()
@@ -45,7 +45,7 @@ def build(output, repository=None, previous=None, fetch_previous=False):
     manifest = read_json(PACKAGE / "package.json")
     version = manifest["version"]
     package_id = manifest["name"]
-    if package_id != "net.l1zerox.radialinventory" or not re.fullmatch(r"\d+\.\d+\.\d+", version):
+    if package_id != "net.l1zerox.radialinventory" or not re.fullmatch(r"\d+\.\d+\.\d+(?:-beta\.[1-9]\d*)?", version):
         raise ValueError("Unexpected package ID or non-release version")
     if manifest.get("legacyPackages") != ["yagihata.radialinventorysystem.v4"]:
         raise ValueError("Original package replacement declaration missing")
@@ -70,7 +70,7 @@ def build(output, repository=None, previous=None, fetch_previous=False):
     (output / "SHA256SUMS.txt").write_text(f"{digest}  {archive.name}\n", encoding="utf-8")
     report = {"version": version, "archive": archive.name, "sha256": digest,
               "files": len(files), "checks": ["VPM ZIP root", "ZIP CRC", "manifest", "MIT copyright", "original package replacement", "distribution file scan"],
-              "listingGenerated": False, "published": False}
+              "listingGenerated": False, "published": False, "prerelease": "-" in version}
     if repository:
         if not re.fullmatch(r"[A-Za-z0-9-]+/[A-Za-z0-9_.-]+", repository):
             raise ValueError("repository must be owner/repository")
@@ -109,9 +109,13 @@ def build(output, repository=None, previous=None, fetch_previous=False):
         add_url = "vcc://vpm/addRepo?url=" + urllib.parse.quote(listing_url, safe="")
         page = (ROOT / "site/index.template.html").read_text(encoding="utf-8")
         asset_version = hashlib.sha256(b"".join(p.read_bytes() for p in sorted((ROOT / "site/assets").iterdir()) if p.is_file())).hexdigest()[:12]
-        for key, value in {"VERSION": version, "LISTING_URL": listing_url, "ADD_URL": add_url,
+        stable = [v for v in versions if re.fullmatch(r"\d+\.\d+\.\d+", v)]
+        stable_version = max(stable, key=lambda v: tuple(map(int, v.split('.')))) if stable else version
+        shown = versions[stable_version] if report["prerelease"] and stable else published_manifest
+        notice = (f"UI Toolkit ベータ版 v{version} を公開中。VCCの Settings → Packages → Show Pre-Release Packages をONにして選択できます。専用編集の一部は互換UIです。" if report["prerelease"] else "")
+        for key, value in {"VERSION": shown["version"], "CHANNEL_NOTICE": notice, "LISTING_URL": listing_url, "ADD_URL": add_url,
                            "ASSET_VERSION": asset_version,
-                           "REPOSITORY_URL": f"https://github.com/{repository}", "ZIP_URL": published_manifest["url"]}.items():
+                           "REPOSITORY_URL": f"https://github.com/{repository}", "ZIP_URL": shown["url"]}.items():
             page = page.replace("{{" + key + "}}", html.escape(value, quote=True))
         (site / "index.html").write_text(page, encoding="utf-8")
         shutil.copytree(ROOT / "site/assets", site / "assets", dirs_exist_ok=True)

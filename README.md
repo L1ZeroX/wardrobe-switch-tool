@@ -1,5 +1,22 @@
 # 衣装簡単切替ツール
 
+## UI Toolkit ベータ版 1.15.0-beta.1
+
+Unity **2022.3.22f1** とVPM向けのベータ版です。VCCの **Settings → Packages → Show Pre-Release Packages** をONにして、このバージョンを選びます。導入前にUnityで編集中の設定JSONとシーンを保存し、プロジェクトをバックアップしてください。
+
+メイン画面は `EditorWindow.CreateGUI`、同梱の `Editor/UI/WardrobeWindow.uxml` と `WardrobeWindow.uss` を使用します。「基本」ではアバター・グループ・衣装選択、検索、名前や初期状態などの基本項目、容量表示、適用操作がUI Toolkitです。グループ行へHierarchyの衣装をドロップすると既存の自動登録・サイズ違い選択に接続します。並べ替えはドラッグまたは上下ボタンで行います。検索中は曖昧な並べ替えを防ぐためドラッグ並べ替えを無効にしています。
+
+**移行範囲：** シンプル・詳細モードの編集部、合体・登録確認・画像構図・ヒール・胸補正などの専用編集は既存のIMGUIを維持しています。ベータの段階では全ウィンドウの完全移行ではありません。上部の「互換画面」で同じ編集中データを従来画面に表示できます。描画方式を戻しても衣装設定を変換・削除しません。
+
+**リソース：** `KaiPackageResources` が `PackageInfo.FindForAssembly` の `assetPath` を使って読み込みます。物理ディスクの固定パスや `Library/PackageCache` への直接アクセスはありません。Assets内のソース配置では同梱UXMLの固定GUIDをアンカーにします。UXML・USS・既存PNG・metaをまとめて配布してください。UI ToolkitはUnity 2022.3に内蔵された機能を使用し、プレビュー版の追加UIパッケージは不要です。
+
+**アセンブリ：** 既存GUIDと参照互換性を保持した `Editor/yagihata.radialinventorysystem.v4.Editor.asmdef` に `includePlatforms: ["Editor"]` を設定しています。UI実装はPlayerビルド対象外です。Runtime側の既存アセンブリ名とコンポーネントのGUIDは変更していません。
+
+**保存と復帰：** スクリプト再読み込みでは未保存のモデルをEditorWindowに退避します。ウィンドウを閉じたりUnityを終了したりする前は「設定を保存…」でJSONを保存してください。適用後はシーンも保存してください。安定版へ戻す場合はJSON・シーンを保存してUnityを閉じ、VCCで1.14.3を選択します。元のMITライセンスと著作権表示は維持しています。
+
+VCCのプレリリース仕様：https://vcc.docs.vrchat.com/vpm/packages/#prerelease-packages
+
+
 VRChatアバターの衣装を、個別またはグループで切り替えるUnityエディター拡張です。Radial Inventory System V4 4.6.0を基にした改変版です。
 
 **[配布ページ・VCCに追加](https://l1zerox.github.io/wardrobe-switch-tool/)**

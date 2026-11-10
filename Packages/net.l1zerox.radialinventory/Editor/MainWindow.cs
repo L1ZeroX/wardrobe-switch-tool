@@ -16,7 +16,7 @@ using VRC.SDKBase;
 
 namespace YagihataItems.RadialInventorySystemV4
 {
-    public class MainWindow : EditorWindow
+    public partial class MainWindow : EditorWindow
     {
         private IndexedList indexedList = new IndexedList();
         private Vector2 scrollPosition = new Vector2();
@@ -53,6 +53,7 @@ namespace YagihataItems.RadialInventorySystemV4
             window.tabItems = new Dictionary<RIS.MenuModeType, EditorTab> {
                 { RIS.MenuModeType.Simple, new TabSimple() }, { RIS.MenuModeType.Basic, new TabBasic() }, { RIS.MenuModeType.Advanced, new TabAdvanced() } };
             foreach (var tab in window.tabItems.Values) tab.InitializeTab(ref window.risAvatar);
+            window.RefreshToolkit();
         }
         private void ShowJSONSelector()
         {
@@ -105,7 +106,7 @@ namespace YagihataItems.RadialInventorySystemV4
                 }
             }
         }
-        private void OnGUI()
+        private void DrawLegacyEditor()
         {
 
             if(tabItems == null)
